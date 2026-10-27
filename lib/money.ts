@@ -3,14 +3,15 @@ import type { Offer, OfferView, PriceSummary, Quotation } from "./types";
 export function summarizeQuotations(rows: Quotation[]): PriceSummary {
   const valid = rows.filter((row) => row.collectionComplete && Number.isSafeInteger(row.priceCents) && row.priceCents > 0);
   if (!valid.length) return { averageCents: null, goodPriceCents: null, greatPriceCents: null, observationCount: 0, latestObservedAt: null, limitedSample: true };
-  // Integer cents avoid floating-point currency arithmetic. Thresholds round down to a payable cent.
+  // All currency calculations use integer cents / BigInt to avoid binary floating-point drift.
   const sum = valid.reduce((total, row) => total + BigInt(row.priceCents), 0n);
-  const averageCents = Number((sum + BigInt(Math.floor(valid.length / 2))) / BigInt(valid.length));
+  const count = BigInt(valid.length);
+  const averageCents = Number((sum + count / 2n) / count);
   const latestObservedAt = valid.reduce<string | null>((latest, row) => !latest || row.observedAt > latest ? row.observedAt : latest, null);
   return {
     averageCents,
-    goodPriceCents: Math.floor(averageCents * 0.9),
-    greatPriceCents: Math.floor(averageCents * 0.8),
+    goodPriceCents: Number((BigInt(averageCents) * 9n) / 10n),
+    greatPriceCents: Number((BigInt(averageCents) * 8n) / 10n),
     observationCount: valid.length,
     latestObservedAt,
     limitedSample: valid.length < 5
