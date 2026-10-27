@@ -51,21 +51,21 @@ A prévia é um ambiente temporário de desenvolvimento, não um endereço de pr
 7. Desabilite o cadastro público em Authentication. Crie o primeiro usuário administrador pelo fluxo privado do Supabase e atribua `app_metadata.mangatrack_admin=true` por um procedimento confiável no servidor; nunca permita que o próprio usuário defina esse atributo.
 8. Antes de produção, implemente e teste RPCs seguros para estatísticas e resumos de cotações, verifique RLS com contas de visitante e administrador e complete o adaptador de dados.
 
-O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações, e `0003_public_quotation_trends.sql` cria uma RPC pública que retorna apenas médias diárias agregadas, exigindo pelo menos três observações por edição/dia. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A RPC de tendências está preparada, mas ainda precisa ser integrada ao adaptador Supabase e validada num projeto Supabase real. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos; não habilite a aplicação em produção antes de concluir essas etapas.
+O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações, e `0003_public_quotation_trends.sql` cria uma RPC pública que retorna apenas médias diárias agregadas, exigindo pelo menos três observações por edição/dia. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A migração `0003_public_quotation_trends.sql` disponibiliza somente médias diárias com pelo menos três registros por edição/dia. O adaptador e o fluxo de login já estão no código, mas precisam ser validados em um projeto Supabase real antes de produção. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos.
 
 ## Segurança
 
 - Nunca versione `.env.local` ou segredos.
 - Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` em variáveis `NEXT_PUBLIC_*`.
 - RLS é obrigatória, mas não substitui validação e autorização no servidor.
-- O painel atual não autentica usuários e não deve ser considerado protegido para produção.
+- O painel administrativo verifica a permissão `app_metadata.mangatrack_admin=true` e as gravações também dependem das políticas RLS. Antes de produção, valide o fluxo com uma conta de administrador e outra conta sem privilégios.
 
 ## Publicação na Vercel
 
 1. Importe este repositório no painel da Vercel.
 2. Configure as variáveis de ambiente somente quando o Supabase estiver pronto.
 3. Execute build e testes no ambiente de integração contínua antes de publicar.
-4. Para ambiente de produção, defina `MANGATRACK_DATA_MODE=supabase` somente depois que o adaptador Supabase, a autenticação e as políticas tiverem sido implementados e testados.
+4. Configure `MANGATRACK_DATA_MODE=supabase` e as variáveis públicas do Supabase apenas depois de aplicar as migrações e validar a conexão. Não defina `SUPABASE_SERVICE_ROLE_KEY` no cliente; a aplicação não precisa dessa chave para o fluxo normal.
 5. Faça uma implantação de preview, valide acesso público/admin, imagens e políticas, e só então promova para produção.
 
 ## Backup e recuperação
@@ -78,4 +78,4 @@ O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração 
 
 ## Estado atual
 
-O projeto contém estrutura Next.js, identidade visual responsiva, páginas de início/catálogo/detalhes/cotações/ofertas/admin, formulários locais para obras/edições/cotações/ofertas, edição e arquivamento de obras/edições, gerenciamento de status de ofertas, arquivamento/restauração de cotações, pesquisa no catálogo, filtros de ofertas, gráfico e resumos de preços, cálculos monetários em centavos, validação Zod, testes unitários e migrações SQL versionadas. A integração Supabase funcional, persistência real, autenticação administrativa, estatísticas populares seguras, armazenamento de capas e testes de aceitação completos ainda precisam ser implementados. Não declare a aplicação pronta para produção neste estágio.
+O projeto contém estrutura Next.js, identidade visual responsiva, páginas de início/catálogo/detalhes/cotações/ofertas/admin, formulários, pesquisa, filtros, gráficos, validação, testes unitários, migrações SQL versionadas, um adaptador Supabase para obras/edições/cotações/ofertas, login por e-mail e senha com verificação de permissão administrativa, autorização nas ações do servidor e uma RPC pública que fornece somente tendências agregadas de cotações. Ainda falta validar a integração com um projeto Supabase real, configurar e provisionar o primeiro administrador, implementar uma RPC segura para incrementar estatísticas populares, configurar políticas de Storage para capas e concluir testes de aceitação. Não declare a aplicação pronta para produção neste estágio.
