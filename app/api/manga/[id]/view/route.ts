@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { dataMode } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,8 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const cookieName = `mt_view_${id.replaceAll("-", "")}`;
   if (cookieStore.get(cookieName)) return new NextResponse(null, { status: 204 });
 
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return NextResponse.json({ error: "Popularity tracking unavailable." }, { status: 503 });
+  const supabase = createSupabaseServiceClient();
+  if (!supabase) return NextResponse.json({ error: "Popularity tracking is not configured." }, { status: 503 });
   const { error } = await supabase.rpc("increment_manga_search_count", { p_manga_id: id });
   if (error) {
     console.error("[manga-view] Popularity update failed.", { code: error.code });
