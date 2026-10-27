@@ -1,0 +1,6 @@
+{
+  "startCommand": "npm run dev",
+  "env": {
+    "MANGATRACK_DATA_MODE": "local"
+  }
+}
