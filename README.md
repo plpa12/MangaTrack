@@ -51,7 +51,7 @@ A prévia é um ambiente temporário de desenvolvimento, não um endereço de pr
 7. Desabilite o cadastro público em Authentication. Crie o primeiro usuário administrador pelo fluxo privado do Supabase e atribua `app_metadata.mangatrack_admin=true` por um procedimento confiável no servidor; nunca permita que o próprio usuário defina esse atributo.
 8. Antes de produção, implemente e teste RPCs seguros para estatísticas e resumos de cotações, verifique RLS com contas de visitante e administrador e complete o adaptador de dados.
 
-O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos; não habilite a aplicação em produção antes de concluir essa etapa.
+O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações, e `0003_public_quotation_trends.sql` cria uma RPC pública que retorna apenas médias diárias agregadas, exigindo pelo menos três observações por edição/dia. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A RPC de tendências está preparada, mas ainda precisa ser integrada ao adaptador Supabase e validada num projeto Supabase real. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos; não habilite a aplicação em produção antes de concluir essas etapas.
 
 ## Segurança
 
