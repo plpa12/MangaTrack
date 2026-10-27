@@ -1,5 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { dataRepository, dataMode } from "@/lib/data";
 import { isSupabaseAdmin } from "@/lib/supabase/admin";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema, updateOfferInputSchema } from "@/lib/validation";
@@ -18,6 +20,26 @@ const failure = (_error: unknown): MangaActionState => ({ success: false, messag
 const successMessage = (supabaseMessage: string, localMessage: string) =>
   dataMode === "supabase" ? supabaseMessage : localMessage;
 
+async function uploadCover(formData: FormData): Promise<{ url: string | null; error: string | null }> {
+  const value = formData.get("coverFile");
+  if (!(value instanceof File) || value.size === 0) return { url: null, error: null };
+  if (dataMode !== "supabase") return { url: null, error: "O envio de capas exige o modo Supabase ativo." };
+  if (value.size > 5 * 1024 * 1024) return { url: null, error: "A capa deve ter no máximo 5 MB." };
+  const extensions: Record<string, string> = {
+    "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif"
+  };
+  const extension = extensions[value.type];
+  if (!extension) return { url: null, error: "Formato inválido. Use JPG, PNG, WebP ou AVIF." };
+  const client = await createSupabaseServerClient();
+  if (!client) return { url: null, error: "O armazenamento de capas não está configurado." };
+  const path = `${randomUUID()}.${extension}`;
+  const { error } = await client.storage.from("mangatrack-covers").upload(path, await value.arrayBuffer(), {
+    contentType: value.type, cacheControl: "31536000", upsert: false
+  });
+  if (error) return { url: null, error: "Não foi possível enviar a capa. Verifique a sessão administrativa e as permissões do Storage." };
+  return { url: client.storage.from("mangatrack-covers").getPublicUrl(path).data.publicUrl, error: null };
+}
+
 export async function createMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
@@ -30,7 +52,9 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
     publicationStatus: formData.get("publicationStatus") || "unknown"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
-  try { await dataRepository.createManga(parsed.data); refreshDataPages(); return { success: true, message: successMessage("Obra salva no Supabase.", "Obra criada apenas na memória deste processo; ela não foi salva permanentemente.") }; }
+  const cover = await uploadCover(formData);
+  if (cover.error) return { success: false, message: cover.error };
+  try { await dataRepository.createManga({ ...parsed.data, coverUrl: cover.url ?? parsed.data.coverUrl }); refreshDataPages(); return { success: true, message: successMessage("Obra salva no Supabase.", "Obra criada apenas na memória deste processo; ela não foi salva permanentemente.") }; }
   catch (error) { return failure(error); }
 }
 
@@ -119,8 +143,10 @@ export async function updateMangaAction(_previous: MangaActionState, formData: F
   if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
   const parsed = mangaInputSchema.safeParse(mangaFormData(formData));
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
+  const cover = await uploadCover(formData);
+  if (cover.error) return { success: false, message: cover.error };
   try {
-    await dataRepository.updateManga(id, parsed.data);
+    await dataRepository.updateManga(id, { ...parsed.data, coverUrl: cover.url ?? parsed.data.coverUrl });
     refreshDataPages();
     return { success: true, message: successMessage("Obra atualizada no Supabase.", "Alterações aplicadas temporariamente; elas não foram salvas permanentemente.") };
   } catch (error) { return failure(error); }
