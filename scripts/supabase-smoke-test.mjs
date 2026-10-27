@@ -36,17 +36,19 @@ try {
   }
   console.log("PASS: Supabase Auth accepted an authorized MangaTrack administrator.");
 
-  const [mangaRead, editionRead, offerRead, trendsRead] = await Promise.all([
+  const [mangaRead, editionRead, offerRead, trendsRead, countsRead] = await Promise.all([
     supabase.from("manga").select("id").limit(1),
     supabase.from("editions").select("id").limit(1),
     supabase.from("offers").select("id").limit(1),
-    supabase.rpc("get_public_quotation_trends")
+    supabase.rpc("get_public_quotation_trends"),
+    supabase.rpc("get_public_quotation_observation_counts")
   ]);
   for (const [label, result] of [
     ["manga read", mangaRead],
     ["edition read", editionRead],
     ["offer read", offerRead],
-    ["public quotation trends RPC", trendsRead]
+    ["public quotation trends RPC", trendsRead],
+    ["public quotation counts RPC", countsRead]
   ]) {
     if (result.error) throw new Error(`Supabase ${label} failed: ${result.error.message}`);
     console.log(`PASS: ${label} query completed.`);
