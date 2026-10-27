@@ -14,7 +14,9 @@ const localOnlyMessage = () => process.env.NODE_ENV === "production"
 const refreshDataPages = () => {
   for (const path of ["/", "/mangas", "/quotations", "/offers", "/admin"]) revalidatePath(path);
 };
-const failure = (error: unknown): MangaActionState => ({ success: false, message: error instanceof Error ? error.message : "Confira os campos informados e tente novamente." });
+const failure = (_error: unknown): MangaActionState => ({ success: false, message: "Não foi possível concluir a operação. Confira os dados e as permissões e tente novamente." });
+const successMessage = (supabaseMessage: string, localMessage: string) =>
+  dataMode === "supabase" ? supabaseMessage : localMessage;
 
 export async function createMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
@@ -28,7 +30,7 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
     publicationStatus: formData.get("publicationStatus") || "unknown"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
-  try { await dataRepository.createManga(parsed.data); refreshDataPages(); return { success: true, message: "Obra criada apenas na memória deste processo. Ela não foi salva permanentemente." }; }
+  try { await dataRepository.createManga(parsed.data); refreshDataPages(); return { success: true, message: successMessage("Obra salva no Supabase.", "Obra criada apenas na memória deste processo; ela não foi salva permanentemente.") }; }
   catch (error) { return failure(error); }
 }
 
@@ -42,7 +44,7 @@ export async function createEditionAction(_previous: MangaActionState, formData:
     notes: formData.get("notes") || null
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos da edição." };
-  try { await dataRepository.createEdition(parsed.data); refreshDataPages(); return { success: true, message: "Edição criada temporariamente neste processo." }; }
+  try { await dataRepository.createEdition(parsed.data); refreshDataPages(); return { success: true, message: successMessage("Edição salva no Supabase.", "Edição criada temporariamente neste processo.") }; }
   catch (error) { return failure(error); }
 }
 
@@ -64,7 +66,7 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
     collectionComplete: formData.get("collectionComplete") === "on"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Informe uma cotação válida." };
-  try { await dataRepository.createQuotation(parsed.data); refreshDataPages(); return { success: true, message: "Cotação registrada temporariamente. Ela se refere a uma coleção completa." }; }
+  try { await dataRepository.createQuotation(parsed.data); refreshDataPages(); return { success: true, message: successMessage("Cotação salva no Supabase e vinculada a uma coleção completa.", "Cotação registrada temporariamente. Ela se refere a uma coleção completa.") }; }
   catch (error) { return failure(error); }
 }
 
@@ -91,7 +93,7 @@ export async function createOfferAction(_previous: MangaActionState, formData: F
     status: formData.get("status") || "draft"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os dados da oferta." };
-  try { await dataRepository.createOffer(parsed.data); refreshDataPages(); return { success: true, message: "Oferta criada temporariamente. Só ofertas publicadas e válidas aparecem ao público." }; }
+  try { await dataRepository.createOffer(parsed.data); refreshDataPages(); return { success: true, message: successMessage("Oferta salva no Supabase. Só ofertas publicadas e válidas aparecem ao público.", "Oferta criada temporariamente. Só ofertas publicadas e válidas aparecem ao público.") }; }
   catch (error) { return failure(error); }
 }
 
@@ -120,7 +122,7 @@ export async function updateMangaAction(_previous: MangaActionState, formData: F
   try {
     await dataRepository.updateManga(id, parsed.data);
     refreshDataPages();
-    return { success: true, message: "Alterações aplicadas temporariamente; elas não foram salvas permanentemente." };
+    return { success: true, message: successMessage("Obra atualizada no Supabase.", "Alterações aplicadas temporariamente; elas não foram salvas permanentemente.") };
   } catch (error) { return failure(error); }
 }
 
@@ -132,7 +134,7 @@ export async function archiveMangaAction(_previous: MangaActionState, formData: 
   try {
     await dataRepository.archiveManga(id);
     refreshDataPages();
-    return { success: true, message: "Obra arquivada temporariamente. Ela deixa de aparecer no catálogo." };
+    return { success: true, message: successMessage("Obra arquivada no Supabase e removida do catálogo público.", "Obra arquivada temporariamente. Ela deixa de aparecer no catálogo.") };
   } catch (error) { return failure(error); }
 }
 
@@ -156,7 +158,7 @@ export async function updateEditionAction(_previous: MangaActionState, formData:
   try {
     await dataRepository.updateEdition(id, parsed.data);
     refreshDataPages();
-    return { success: true, message: "Edição atualizada temporariamente; as alterações não são permanentes." };
+    return { success: true, message: successMessage("Edição atualizada no Supabase.", "Edição atualizada temporariamente; as alterações não são permanentes.") };
   } catch (error) { return failure(error); }
 }
 
@@ -168,7 +170,7 @@ export async function archiveEditionAction(_previous: MangaActionState, formData
   try {
     await dataRepository.archiveEdition(id);
     refreshDataPages();
-    return { success: true, message: "Edição arquivada sem apagar o histórico de cotações." };
+    return { success: true, message: successMessage("Edição arquivada no Supabase sem apagar o histórico de cotações.", "Edição arquivada sem apagar o histórico de cotações.") };
   } catch (error) { return failure(error); }
 }
 
@@ -185,7 +187,7 @@ export async function updateOfferStatusAction(_previous: MangaActionState, formD
   try {
     await dataRepository.updateOfferStatus(id, status as OfferStatus);
     refreshDataPages();
-    return { success: true, message: "Status da oferta atualizado temporariamente; a alteração não é permanente." };
+    return { success: true, message: successMessage("Status da oferta atualizado no Supabase.", "Status da oferta atualizado temporariamente; a alteração não é permanente.") };
   } catch (error) { return failure(error); }
 }
 
@@ -201,7 +203,7 @@ export async function setQuotationArchivedAction(_previous: MangaActionState, fo
   try {
     await dataRepository.setQuotationArchived(id, archived);
     refreshDataPages();
-    return { success: true, message: archived ? "Cotação arquivada. Ela deixa de influenciar médias públicas, mas permanece no histórico administrativo." : "Cotação restaurada e incluída novamente nos cálculos." };
+    return { success: true, message: successMessage(archived ? "Cotação arquivada no Supabase; ela deixa de influenciar médias públicas e permanece no histórico administrativo." : "Cotação restaurada no Supabase e incluída novamente nos cálculos.", archived ? "Cotação arquivada. Ela deixa de influenciar médias públicas, mas permanece no histórico administrativo." : "Cotação restaurada e incluída novamente nos cálculos.") };
   } catch (error) { return failure(error); }
 }
 
@@ -227,6 +229,6 @@ export async function updateOfferAction(_previous: MangaActionState, formData: F
   try {
     await dataRepository.updateOffer(id, parsed.data);
     refreshDataPages();
-    return { success: true, message: "Oferta atualizada temporariamente; a alteração não é permanente." };
+    return { success: true, message: successMessage("Oferta atualizada no Supabase.", "Oferta atualizada temporariamente; a alteração não é permanente.") };
   } catch (error) { return failure(error); }
 }
