@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, BookOpen, Home, Tag, TrendingUp } from "lucide-react";
+import { Activity } from "lucide-react";
+import NavLinks from "./nav-links";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,13 +9,6 @@ export const metadata: Metadata = {
   description: "Acompanhe edições, cotações de coleções usadas completas e ofertas de mangás.",
   applicationName: "MangaTrack"
 };
-
-const links = [
-  { href: "/", label: "Início", icon: Home },
-  { href: "/mangas", label: "Mangás", icon: BookOpen },
-  { href: "/quotations", label: "Cotações", icon: TrendingUp },
-  { href: "/offers", label: "Ofertas", icon: Tag }
-];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const localMode = process.env.MANGATRACK_DATA_MODE !== "supabase" ||
@@ -29,11 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <span>Manga<span className="brand-accent">Track</span><small>SEU RADAR DE MANGÁS</small></span>
             </Link>
             <p className="nav-caption">MENU PRINCIPAL</p>
-            <nav className="main-nav" aria-label="Navegação principal">
-              {links.map(({ href, label, icon: Icon }) => (
-                <Link href={href} className="nav-link" key={href}><Icon size={18} /><span>{label}</span></Link>
-              ))}
-            </nav>
+            <NavLinks />
             <div className="sidebar-bottom">
               <span className="sidebar-dot" />
               <div><strong>MangaTrack</strong><small>Projeto em desenvolvimento</small></div>
