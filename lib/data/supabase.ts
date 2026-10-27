@@ -108,7 +108,10 @@ export const supabaseData: MangaRepository = {
     return (data ?? []).map(mapQuotation);
   },
   async listPublicQuotationTrends(): Promise<PublicQuotationTrend[]> { return buildPublicQuotationTrends(await this.listPublicQuotationValues()); },
-  async listPublicQuotationObservationCounts() { return countPublicQuotationValues(await this.listPublicQuotationValues()); },
+  async listPublicQuotationObservationCounts() {
+    const [counts, editions] = await Promise.all([this.listPublicQuotationValues().then(countPublicQuotationValues), this.listEditions()]);
+    return editions.map(({ id }) => counts.find((count) => count.editionId === id) ?? { editionId: id, observationCount: 0 });
+  },
   async listPublicQuotationValues() {
     const db = await clientOrThrow();
     const { data, error } = await db.rpc("get_public_quotation_values");
