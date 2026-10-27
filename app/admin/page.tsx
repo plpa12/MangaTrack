@@ -27,7 +27,7 @@ export default async function AdminPage() {
     <div className="stats-grid">
       <div className="stat-card"><span className="stat-icon"><Database size={20}/></span><div><small>Modo de dados</small><strong style={{fontSize:15}}>{dataMode === "supabase" ? "Supabase ativo" : "Local temporário"}</strong></div></div>
       <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras / edições</small><strong>{mangas.length} / {editions.length}</strong></div></div>
-      <div className="stat-card"><span className="stat-icon"><ShieldCheck size={20}/></span><div><small>Autenticação</small><strong style={{fontSize:15}}>Pendente</strong></div></div>
+      <div className="stat-card"><span className="stat-icon"><ShieldCheck size={20}/></span><div><small>Autenticação</small><strong style={{fontSize:15}}>{dataMode === "supabase" ? "Verificada" : "Pendente"}</strong></div></div>
     </div>
     <section><div className="section-head"><div><h2>Cadastrar obra</h2><p>Título e autor são obrigatórios; capa e dados editoriais podem ser adicionados depois.</p></div></div><div className="panel"><MangaForm /></div></section>
     <section><div className="section-head"><div><h2>Editar ou arquivar obras</h2><p>Atualize os dados editoriais ou arquive uma obra sem apagar o histórico.</p></div></div><MangaManagement mangas={mangas}/></section>
