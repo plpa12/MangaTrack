@@ -93,7 +93,7 @@ export default function QuotationExplorer({
     {editionId !== "all" && availability === "insufficient" && <div className="empty-state">
       <span className="empty-icon">↗</span>
       <h3>Há cotações, mas ainda não há dados públicos suficientes</h3>
-      <p>Existe{selectedObservationCount === 1 ? "" : "m"} {selectedObservationCount} cotaç{selectedObservationCount === 1 ? "ão" : "ões"} elegível{selectedObservationCount === 1 ? "" : "s"} para esta edição. A média, os indicadores de preço e o gráfico aparecem quando houver dados agregados suficientes; os valores individuais cadastrados podem ser consultados acima.</p>
+      <p>Existe{selectedObservationCount === 1 ? "" : "m"} {selectedObservationCount} cotaç{selectedObservationCount === 1 ? "ão" : "ões"} elegível{selectedObservationCount === 1 ? "" : "s"} para esta edição. A média geral considera todas as cotações elegíveis, mesmo em dias diferentes. O gráfico agrupa os registros por dia; os valores individuais cadastrados podem ser consultados acima.</p>
     </div>}
   </div>;
 }
