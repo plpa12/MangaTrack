@@ -76,6 +76,18 @@ const offerWrite = (input: CreateOfferInput) => ({
 });
 
 export const supabaseData: MangaRepository = {
+  async listPopularManga(limit = 10) {
+    const db = await clientOrThrow();
+    const { data, error } = await db.rpc("get_public_popular_manga", { p_limit: Math.max(1, Math.min(Math.trunc(limit), 20)) });
+    fail(error);
+    const ranked = (data ?? []) as { manga_id: string; selection_count: number }[];
+    const ids = ranked.filter((row) => row.selection_count > 0).map((row) => row.manga_id);
+    if (!ids.length) return [];
+    const { data: mangaRows, error: mangaError } = await db.from("manga").select("*").in("id", ids).eq("archived", false);
+    fail(mangaError);
+    const byId = new Map((mangaRows ?? []).map((row) => [row.id, mapManga(row)]));
+    return ranked.flatMap((row) => { const manga = byId.get(row.manga_id); return manga ? [{ ...manga, searchCount: Number(row.selection_count) }] : []; });
+  },
   async listManga(query) {
     const db = await clientOrThrow();
     let request = db.from("manga").select("*").eq("archived", false).order("title");
