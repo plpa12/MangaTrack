@@ -37,6 +37,7 @@ export async function GET() {
       quotationTrendsRpc: results[3].status === "fulfilled",
       quotationCountsRpc: results[4].status === "fulfilled",
       popularMangaRpc: results[5].status === "fulfilled",
+      popularityTrackingConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
       coverStorageAvailable: false,
       offerEvidenceProtected
     };
