@@ -92,7 +92,7 @@ export async function createOfferAction(_previous: MangaActionState, formData: F
 function mangaFormData(formData: FormData) {
   return {
     title: formData.get("title"), author: formData.get("author"), coverUrl: formData.get("coverUrl") || "",
-    alternativeTitles: String(formData.get("alternativeTitles") || "").split("\\n").map((value) => value.trim()).filter(Boolean),
+    alternativeTitles: String(formData.get("alternativeTitles") || "").split("\n").map((value) => value.trim()).filter(Boolean),
     synopsis: formData.get("synopsis") || null,
     chapterCount: formData.get("chapterCount") ? Number(formData.get("chapterCount")) : null,
     originalVolumeCount: formData.get("originalVolumeCount") ? Number(formData.get("originalVolumeCount")) : null,
