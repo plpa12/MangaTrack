@@ -6,12 +6,12 @@ describe("public quotation visibility", () => {
     expect(getQuotationAvailability(0, false)).toBe("none");
   });
 
-  it("distinguishes existing quotations from insufficient public aggregates", () => {
+  it("distinguishes existing quotations from missing aggregate data", () => {
     expect(getQuotationAvailability(1, false)).toBe("insufficient");
     expect(getQuotationAvailability(2, false)).toBe("insufficient");
   });
-
-  it("allows public price displays only when a safe aggregate exists", () => {
-    expect(getQuotationAvailability(3, true)).toBe("available");
+  it("allows a single eligible quotation to produce a public aggregate", () => {
+    expect(getQuotationAvailability(1, true)).toBe("available");
+    expect(getQuotationAvailability(2, true)).toBe("available");
   });
 });
