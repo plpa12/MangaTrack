@@ -109,5 +109,5 @@ create policy "public reads manga search stats" on public.manga_search_stats for
 create policy "admins manage manga search stats" on public.manga_search_stats for all to authenticated using (public.is_mangatrack_admin()) with check (public.is_mangatrack_admin());
 
 -- No seed data. Set app_metadata.mangatrack_admin=true only through a trusted server/admin process.
--- TODO before production: replace direct stats reads with a safe RPC increment function,
--- configure Storage bucket policies, and add an aggregate-only quotation summary RPC/view.
+-- TODO before production: replace direct stats reads with a safe RPC increment function and configure Storage bucket policies.
+-- Migration 0003 provides the aggregate-only public quotation trends RPC.
