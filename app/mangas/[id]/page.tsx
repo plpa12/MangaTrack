@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Layers3, Tag } from "lucide-react";
 import { dataRepository } from "@/lib/data";
-import { formatBRL, sortPublicOffers, summarizeQuotations } from "@/lib/money";
+import { formatBRL, sortPublicOffers } from "@/lib/money";
 
 export default async function MangaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,7 +14,7 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ id
   ]);
   const editionSummaries = await Promise.all(editions.map(async (edition) => ({
     edition,
-    summary: summarizeQuotations(await dataRepository.listQuotations(edition.id))
+    summary: await dataRepository.getQuotationSummary(edition.id)
   })));
   const offers = sortPublicOffers(allOffers).filter((offer) => offer.mangaId === manga.id || editions.some((edition) => edition.id === offer.editionId));
   return <div>
@@ -34,6 +34,6 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ id
       {offers.length === 0 ? <div className="empty-state"><span className="empty-icon"><Tag size={20}/></span><h3>Nenhuma oferta relacionada</h3><p>Quando houver promoções válidas associadas a esta obra, elas serão mostradas aqui.</p></div> :
         <div className="offer-grid">{offers.map((offer) => <article className="offer-card" key={offer.id}>{offer.imageUrl ? <img className="offer-image" src={offer.imageUrl} alt="" loading="lazy"/> : <div className="offer-image offer-image-placeholder"><Tag size={24}/></div>}<div className="offer-card-body"><span className="pill">{offer.store}</span><h2>{offer.title}</h2><div className="offer-prices"><strong>{formatBRL(offer.promotionalPriceCents)}</strong>{offer.discountPercent !== null && offer.previousPriceCents && <><span className="offer-old-price">{formatBRL(offer.previousPriceCents)}</span><span className="discount-pill">-{offer.discountPercent.toLocaleString("pt-BR")}%</span></>}</div><a className="button button-primary offer-open" href={offer.affiliateUrl || offer.productUrl} target="_blank" rel="noopener noreferrer">Ver oferta</a></div></article>)}</div>}
     </section>
-    <div className="notice"><BookOpen size={15} style={{display:"inline",verticalAlign:"middle",marginRight:7}}/>Os dados desta página vêm do modo de desenvolvimento atual e não são persistidos.</div>
+    
   </div>;
 }
