@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { dataRepository } from "@/lib/data";
-import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema } from "@/lib/validation";
+import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema, updateOfferInputSchema } from "@/lib/validation";
 import type { OfferStatus } from "@/lib/types";
 
 export type MangaActionState = { message: string; success: boolean };
@@ -190,5 +190,30 @@ export async function setQuotationArchivedAction(_previous: MangaActionState, fo
     await dataRepository.setQuotationArchived(id, archived);
     refreshDataPages();
     return { success: true, message: archived ? "Cotação arquivada. Ela deixa de influenciar médias públicas, mas permanece no histórico administrativo." : "Cotação restaurada e incluída novamente nos cálculos." };
+  } catch (error) { return failure(error); }
+}
+
+
+export async function updateOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da oferta inválido." };
+  let expiresAt: string | null = null;
+  const rawExpiry = String(formData.get("expiresAt") || "");
+  if (rawExpiry) {
+    const date = new Date(rawExpiry);
+    if (Number.isNaN(date.getTime())) return { success: false, message: "Informe uma data de expiração válida." };
+    expiresAt = date.toISOString();
+  }
+  const parsed = updateOfferInputSchema.safeParse({
+    title: formData.get("title"), store: formData.get("store"),
+    promotionalPrice: Number(formData.get("promotionalPrice")),
+    productUrl: formData.get("productUrl"), expiresAt, status: formData.get("status")
+  });
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os dados da oferta." };
+  try {
+    await dataRepository.updateOffer(id, parsed.data);
+    refreshDataPages();
+    return { success: true, message: "Oferta atualizada temporariamente; a alteração não é permanente." };
   } catch (error) { return failure(error); }
 }

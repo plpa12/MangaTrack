@@ -54,6 +54,10 @@ export interface CreateQuotationInput {
   editionId: string; price: number; observedAt: string; listingUrl?: string | null;
   conditionNotes?: string | null; collectionComplete: true;
 }
+export interface UpdateOfferInput {
+  title: string; store: string; promotionalPrice: number; productUrl: string;
+  expiresAt?: string | null; status: OfferStatus;
+}
 export interface CreateOfferInput {
   title: string; mangaId?: string | null; editionId?: string | null; productType: ProductType;
   store: string; promotionalPrice: number; previousPrice?: number | null;
@@ -79,5 +83,6 @@ export interface MangaRepository {
   createQuotation(input: CreateQuotationInput): Promise<Quotation>;
   setQuotationArchived(id: string, archived: boolean): Promise<Quotation>;
   createOffer(input: CreateOfferInput): Promise<Offer>;
+  updateOffer(id: string, input: UpdateOfferInput): Promise<Offer>;
   updateOfferStatus(id: string, status: OfferStatus): Promise<Offer>;
 }

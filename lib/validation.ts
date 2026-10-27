@@ -67,3 +67,12 @@ export type MangaInput = z.infer<typeof mangaInputSchema>;
 export type EditionInput = z.infer<typeof editionInputSchema>;
 export type QuotationInput = z.infer<typeof quotationInputSchema>;
 export type OfferInput = z.infer<typeof offerInputSchema>;
+
+export const updateOfferInputSchema = z.object({
+  title: z.string().trim().min(1).max(220),
+  store: z.string().trim().min(1).max(120),
+  promotionalPrice: money,
+  productUrl: z.url().refine((value) => /^https?:\/\//i.test(value)),
+  expiresAt: z.iso.datetime().nullable().optional(),
+  status: z.enum(["draft", "published", "disabled", "expired"])
+});

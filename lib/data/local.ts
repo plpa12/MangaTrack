@@ -99,6 +99,12 @@ export const localData = {
     store.offers.push(offer);
     return offer;
   },
+  updateOffer(id: string, input: { title: string; store: string; promotionalPrice: number; productUrl: string; expiresAt?: string | null; status: Offer["status"] }): Offer {
+    const offer = store.offers.find((item) => item.id === id);
+    if (!offer) throw new Error("A oferta não foi encontrada.");
+    Object.assign(offer, { title: input.title.trim(), store: input.store.trim(), promotionalPriceCents: Math.round(input.promotionalPrice * 100), productUrl: input.productUrl, expiresAt: input.expiresAt || null, status: input.status, updatedAt: new Date().toISOString() });
+    return offer;
+  },
   updateOfferStatus(id: string, status: Offer["status"]): Offer {
     const offer = store.offers.find((item) => item.id === id);
     if (!offer) throw new Error("A oferta não foi encontrada.");

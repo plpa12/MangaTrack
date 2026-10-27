@@ -3,41 +3,32 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
-import { updateOfferStatusAction, type MangaActionState } from "./actions";
+import { updateOfferAction, type MangaActionState } from "./actions";
 import type { Offer } from "@/lib/types";
 
 const initialState: MangaActionState = { message: "", success: false };
-const labels: Record<Offer["status"], string> = {
-  draft: "Rascunho",
-  published: "Publicada",
-  disabled: "Desativada",
-  expired: "Expirada"
-};
+const labels: Record<Offer["status"], string> = { draft: "Rascunho", published: "Publicada", disabled: "Desativada", expired: "Expirada" };
 function Result({ state }: { state: MangaActionState }) {
   return state.message ? <p className={state.success ? "form-message form-message-success" : "form-message"} role="status">{state.message}</p> : null;
 }
 function OfferItem({ offer }: { offer: Offer }) {
-  const [state, action, pending] = useActionState(updateOfferStatusAction, initialState);
+  const [state, action, pending] = useActionState(updateOfferAction, initialState);
   const router = useRouter();
   useEffect(() => { if (state.success) router.refresh(); }, [state.success, router]);
   return <details className="panel" style={{ marginBottom: 12 }}>
-    <summary style={{ cursor: "pointer", fontWeight: 650, padding: 4 }}>
-      {offer.title} <span className="muted">— {offer.store} · {labels[offer.status]}</span>
-    </summary>
-    <p className="muted" style={{ marginTop: 12 }}>Preço: {(offer.promotionalPriceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+    <summary style={{ cursor: "pointer", fontWeight: 650, padding: 4 }}>{offer.title} <span className="muted">— {offer.store} · {labels[offer.status]}</span></summary>
     <form action={action} className="admin-form" style={{ marginTop: 12 }}>
       <input type="hidden" name="id" value={offer.id}/>
-      <div className="field">
-        <label htmlFor={`offer-status-${offer.id}`}>Status da oferta</label>
-        <select id={`offer-status-${offer.id}`} name="status" defaultValue={offer.status}>
-          <option value="draft">Rascunho</option>
-          <option value="published">Publicada</option>
-          <option value="disabled">Desativada</option>
-          <option value="expired">Expirada</option>
-        </select>
+      <div className="form-grid">
+        <div className="field"><label htmlFor={`offer-title-${offer.id}`}>Título *</label><input id={`offer-title-${offer.id}`} name="title" required maxLength={220} defaultValue={offer.title}/></div>
+        <div className="field"><label htmlFor={`offer-store-${offer.id}`}>Loja *</label><input id={`offer-store-${offer.id}`} name="store" required maxLength={120} defaultValue={offer.store}/></div>
+        <div className="field"><label htmlFor={`offer-price-${offer.id}`}>Preço promocional (R$) *</label><input id={`offer-price-${offer.id}`} name="promotionalPrice" type="number" min="0.01" step="0.01" required defaultValue={(offer.promotionalPriceCents / 100).toFixed(2)}/></div>
+        <div className="field"><label htmlFor={`offer-url-${offer.id}`}>Link do produto *</label><input id={`offer-url-${offer.id}`} name="productUrl" type="url" required defaultValue={offer.productUrl}/></div>
+        <div className="field"><label htmlFor={`offer-expiry-${offer.id}`}>Expira em</label><input id={`offer-expiry-${offer.id}`} name="expiresAt" type="datetime-local" defaultValue={offer.expiresAt ? new Date(offer.expiresAt).toISOString().slice(0,16) : ""}/></div>
+        <div className="field"><label htmlFor={`offer-status-${offer.id}`}>Status</label><select id={`offer-status-${offer.id}`} name="status" defaultValue={offer.status}><option value="draft">Rascunho</option><option value="published">Publicada</option><option value="disabled">Desativada</option><option value="expired">Expirada</option></select></div>
       </div>
-      <p className="field-hint">Publicar torna a oferta elegível para aparecer ao público, desde que passe pelas regras de validação.</p>
-      <button className="button button-primary" type="submit" disabled={pending}><Save size={15}/>{pending ? "Atualizando..." : "Salvar status"}</button>
+      <p className="field-hint">O desconto só é exibido quando o preço anterior foi confirmado com evidência. Ofertas publicadas precisam permanecer válidas.</p>
+      <button className="button button-primary" type="submit" disabled={pending}><Save size={15}/>{pending ? "Salvando..." : "Salvar alterações"}</button>
       <Result state={state}/>
     </form>
   </details>;

@@ -54,6 +54,9 @@ export const dataRepository: MangaRepository = {
   async createOffer(input) {
     return localData.createOffer(input);
   },
+  async updateOffer(id, input) {
+    return localData.updateOffer(id, input);
+  },
   async updateOfferStatus(id, status) {
     return localData.updateOfferStatus(id, status);
   }
