@@ -134,20 +134,29 @@ export const supabaseData: MangaRepository = {
   },
   async getQuotationSummary(editionId) {
     const db = await clientOrThrow();
-    const { data, error } = await db.rpc("get_public_quotation_trends");
-    fail(error);
-    const daily = (data ?? []).filter((row: { edition_id: string }) => row.edition_id === editionId);
-    if (!daily.length) return summarizeQuotations([]);
-    const observations = daily.reduce((sum: number, row: { observation_count: number }) => sum + Number(row.observation_count), 0);
+    const [{ data: trendData, error: trendError }, { data: countData, error: countError }] = await Promise.all([
+      db.rpc("get_public_quotation_trends"),
+      db.rpc("get_public_quotation_observation_counts")
+    ]);
+    fail(trendError);
+    fail(countError);
+    const countRow = (countData ?? []).find((row: { edition_id: string }) => row.edition_id === editionId);
+    const observationCount = countRow ? Number((countRow as { observation_count: number }).observation_count) : 0;
+    const daily = (trendData ?? []).filter((row: { edition_id: string }) => row.edition_id === editionId);
+    if (!daily.length) {
+      return { averageCents: null, goodPriceCents: null, greatPriceCents: null,
+        observationCount, latestObservedAt: null, limitedSample: observationCount < 5 };
+    }
+    const visibleObservations = daily.reduce((sum: number, row: { observation_count: number }) => sum + Number(row.observation_count), 0);
     const weighted = daily.reduce((sum: number, row: { average_price: number; observation_count: number }) =>
       sum + Math.round(Number(row.average_price) * 100) * Number(row.observation_count), 0);
-    const averageCents = Math.round(weighted / observations);
+    const averageCents = Math.round(weighted / visibleObservations);
     const latest = daily.reduce((value: string | null, row: { observed_day: string }) =>
       !value || row.observed_day > value ? row.observed_day : value, null);
     return { averageCents, goodPriceCents: Math.round(averageCents * 0.9),
-      greatPriceCents: Math.round(averageCents * 0.8), observationCount: observations,
+      greatPriceCents: Math.round(averageCents * 0.8), observationCount,
       latestObservedAt: latest ? new Date(`${latest}T12:00:00.000Z`).toISOString() : null,
-      limitedSample: observations < 5 };
+      limitedSample: observationCount < 5 };
   },
   async createManga(input) {
     const db = await clientOrThrow();
