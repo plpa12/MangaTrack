@@ -14,6 +14,20 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
   async getManga(id) { return localData.getManga(id); },
   async listEditions(mangaId) { return localData.listEditions(mangaId); },
   async listQuotations(editionId, includeArchived) { return localData.listQuotations(editionId, includeArchived); },
+  async listPublicQuotationTrends() {
+    const buckets = new Map<string, { editionId: string; observedDay: string; totalCents: number; count: number }>();
+    for (const quotation of localData.listQuotations()) {
+      const observedDay = quotation.observedAt.slice(0, 10);
+      const key = `${quotation.editionId}:${observedDay}`;
+      const bucket = buckets.get(key) ?? { editionId: quotation.editionId, observedDay, totalCents: 0, count: 0 };
+      bucket.totalCents += quotation.priceCents;
+      bucket.count += 1;
+      buckets.set(key, bucket);
+    }
+    return [...buckets.values()].map(({ editionId, observedDay, totalCents, count }) => ({
+      editionId, observedDay, averagePriceCents: Math.round(totalCents / count), observationCount: count
+    })).sort((a, b) => a.observedDay.localeCompare(b.observedDay));
+  },
   async listOffers() { return localData.listOffers(); },
   async getQuotationSummary(editionId) { return summarizeQuotations(localData.listQuotations(editionId)); },
   async createManga(input) { return localData.createManga(input); },
