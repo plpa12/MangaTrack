@@ -78,6 +78,7 @@ export interface CreateOfferInput {
 /** Async data contract keeps pages and server actions independent of the storage provider. */
 export interface MangaRepository {
   listManga(query?: string): Promise<Manga[]>;
+  listPopularManga(limit?: number): Promise<Manga[]>;
   getManga(id: string): Promise<Manga | null>;
   listEditions(mangaId?: string): Promise<Edition[]>;
   listQuotations(editionId?: string, includeArchived?: boolean): Promise<Quotation[]>;
