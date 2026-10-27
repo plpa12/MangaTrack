@@ -1,10 +1,34 @@
 import { localData } from "./local";
+import { summarizeQuotations } from "../money";
+import type { MangaRepository } from "../types";
 
-export const dataMode = process.env.MANGATRACK_DATA_MODE === "supabase" &&
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) ? "supabase-configured" : "local-empty";
+// Supabase is intentionally not selected until its repository adapter and auth are implemented.
+// Merely adding environment variables must never imply that data is connected or persistent.
+export const dataMode = "local-empty" as const;
 
 export { localData };
+
+export const dataRepository: MangaRepository = {
+  async listManga(query) {
+    return localData.listManga(query);
+  },
+  async getManga(id) {
+    return localData.getManga(id);
+  },
+  async listEditions(mangaId) {
+    return localData.listEditions(mangaId);
+  },
+  async listQuotations(editionId) {
+    return localData.listQuotations(editionId);
+  },
+  async listOffers() {
+    return localData.listOffers();
+  },
+  async getQuotationSummary(editionId) {
+    return summarizeQuotations(localData.listQuotations(editionId));
+  }
+};
+
 export function getDataModeLabel(): string {
-  return dataMode === "local-empty" ? "Modo local — dados temporários não persistentes" : "Supabase configurado — validar conexão antes de usar";
+  return "Modo local — dados temporários não persistentes";
 }

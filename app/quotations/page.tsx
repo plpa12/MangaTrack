@@ -1,13 +1,16 @@
 import { AlertCircle } from "lucide-react";
-import { localData } from "@/lib/data/local";
+import { dataRepository } from "@/lib/data";
 import { summarizeQuotations } from "@/lib/money";
 import QuotationExplorer from "./quotation-explorer";
 
-export default function QuotationsPage() {
-  const mangas = localData.listManga();
-  const editions = localData.listEditions();
+export default async function QuotationsPage() {
+  const [mangas, editions, allQuotations] = await Promise.all([
+    dataRepository.listManga(),
+    dataRepository.listEditions(),
+    dataRepository.listQuotations()
+  ]);
   const trends = editions.map((edition) => {
-    const quotations = localData.listQuotations(edition.id);
+    const quotations = allQuotations.filter((quotation) => quotation.editionId === edition.id);
     const dailyBuckets = new Map<string, { totalCents: number; count: number }>();
     for (const quotation of quotations) {
       const day = quotation.observedAt.slice(0, 10);

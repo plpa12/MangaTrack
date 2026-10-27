@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Layers3, Tag } from "lucide-react";
-import { localData } from "@/lib/data/local";
+import { dataRepository } from "@/lib/data";
 import { formatBRL, sortPublicOffers, summarizeQuotations } from "@/lib/money";
 
 export default async function MangaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const manga = localData.getManga(id);
+  const manga = await dataRepository.getManga(id);
   if (!manga) notFound();
-  const editions = localData.listEditions(manga.id);
-  const editionSummaries = editions.map((edition) => ({ edition, summary: summarizeQuotations(localData.listQuotations(edition.id)) }));
-  const offers = sortPublicOffers(localData.listOffers()).filter((offer) => offer.mangaId === manga.id || editions.some((edition) => edition.id === offer.editionId));
+  const [editions, allOffers] = await Promise.all([
+    dataRepository.listEditions(manga.id),
+    dataRepository.listOffers()
+  ]);
+  const editionSummaries = await Promise.all(editions.map(async (edition) => ({
+    edition,
+    summary: summarizeQuotations(await dataRepository.listQuotations(edition.id))
+  })));
+  const offers = sortPublicOffers(allOffers).filter((offer) => offer.mangaId === manga.id || editions.some((edition) => edition.id === offer.editionId));
   return <div>
     <Link href="/mangas" className="section-link"><ArrowLeft size={14} style={{display:"inline",verticalAlign:"middle",marginRight:6}}/>Voltar ao catálogo</Link>
     <div className="manga-detail-layout">

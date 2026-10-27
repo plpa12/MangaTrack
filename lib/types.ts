@@ -31,10 +31,13 @@ export interface PriceSummary {
   observationCount: number; latestObservedAt: string | null; limitedSample: boolean;
 }
 export interface OfferView extends Offer { discountPercent: number | null }
+
+/** Async read contract so pages can use a remote database adapter later without changing their UI. */
 export interface MangaRepository {
   listManga(query?: string): Promise<Manga[]>;
   getManga(id: string): Promise<Manga | null>;
   listEditions(mangaId?: string): Promise<Edition[]>;
-  listPublicOffers(): Promise<OfferView[]>;
+  listQuotations(editionId?: string): Promise<Quotation[]>;
+  listOffers(): Promise<Offer[]>;
   getQuotationSummary(editionId: string): Promise<PriceSummary>;
 }

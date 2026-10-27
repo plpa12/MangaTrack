@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Search, Tag, TrendingUp } from "lucide-react";
-import { localData } from "@/lib/data/local";
+import { dataRepository } from "@/lib/data";
 import { formatBRL, sortPublicOffers, summarizeQuotations } from "@/lib/money";
 
-export default function HomePage() {
-  const mangas = localData.listManga();
-  const offers = sortPublicOffers(localData.listOffers()).slice(0, 3);
-  const editions = localData.listEditions();
-  const quotations = localData.listQuotations();
+export default async function HomePage() {
+  const [mangas, offersData, editions, quotations] = await Promise.all([
+    dataRepository.listManga(),
+    dataRepository.listOffers(),
+    dataRepository.listEditions(),
+    dataRepository.listQuotations()
+  ]);
+  const offers = sortPublicOffers(offersData).slice(0, 3);
   const recentMangas = [...mangas].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
   const mangaById = new Map(mangas.map((manga) => [manga.id, manga]));
   const quotationSummaries = editions.map((edition) => ({ edition, manga: mangaById.get(edition.mangaId), summary: summarizeQuotations(quotations.filter((quote) => quote.editionId === edition.id)) })).filter((row) => row.summary.observationCount > 0).sort((a,b) => (b.summary.latestObservedAt ?? "").localeCompare(a.summary.latestObservedAt ?? "")).slice(0, 4);
@@ -21,7 +24,7 @@ export default function HomePage() {
     <section className="stats-grid" aria-label="Resumo do catálogo">
       <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras cadastradas</small><strong>{mangas.length}</strong></div></div>
       <div className="stat-card"><span className="stat-icon"><TrendingUp size={20}/></span><div><small>Cotações registradas</small><strong>{quotations.length}</strong></div></div>
-      <div className="stat-card"><span className="stat-icon"><Tag size={20}/></span><div><small>Ofertas ativas</small><strong>{sortPublicOffers(localData.listOffers()).length}</strong></div></div>
+      <div className="stat-card"><span className="stat-icon"><Tag size={20}/></span><div><small>Ofertas ativas</small><strong>{sortPublicOffers(offersData).length}</strong></div></div>
     </section>
     <section><div className="section-head"><div><h2>Cotações atualizadas</h2><p>Histórico de coleções usadas completas por edição.</p></div><Link href="/quotations" className="section-link">Ver cotações <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div>
       {quotationSummaries.length ? <div className="admin-list">{quotationSummaries.map(({edition,manga,summary}) => <div className="admin-item" key={edition.id}><div><strong>{manga?.title ?? "Obra"} — {edition.name}</strong><small>{summary.observationCount} observações · atualizado em {summary.latestObservedAt ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"medium"}).format(new Date(summary.latestObservedAt)) : "—"}</small></div><strong>{formatBRL(summary.averageCents)}</strong></div>)}</div> : <div className="empty-state"><span className="empty-icon"><TrendingUp size={20}/></span><h3>As primeiras cotações aparecerão aqui</h3><p>Quando houver observações válidas, você verá médias e tendências de preço por edição.</p></div>}

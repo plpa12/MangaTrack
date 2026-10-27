@@ -1,6 +1,6 @@
-import { localData } from "@/lib/data/local";
+import { dataRepository } from "@/lib/data";
 import MangaCatalogClient from "./catalog-client";
 
-export default function MangasPage() {
-  return <MangaCatalogClient initialMangas={localData.listManga()} />;
+export default async function MangasPage() {
+  return <MangaCatalogClient initialMangas={await dataRepository.listManga()} />;
 }

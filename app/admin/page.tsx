@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { AlertTriangle, BookOpen, Database, ShieldCheck, Tag, TrendingUp } from "lucide-react";
-import { getDataModeLabel } from "@/lib/data";
-import { localData } from "@/lib/data/local";
+import { getDataModeLabel, dataRepository } from "@/lib/data";
 import MangaForm from "./manga-form";
 import { EditionForm, OfferForm, QuotationForm } from "./data-forms";
 
-export default function AdminPage() {
+export default async function AdminPage() {
   const local = getDataModeLabel().startsWith("Modo local");
-  const mangas = localData.listManga();
-  const editions = localData.listEditions();
-  const quotations = localData.listQuotations();
-  const offers = localData.listOffers();
+  const [mangas, editions, quotations, offers] = await Promise.all([
+    dataRepository.listManga(),
+    dataRepository.listEditions(),
+    dataRepository.listQuotations(),
+    dataRepository.listOffers()
+  ]);
   return <div>
     <div className="page-heading"><div><span className="eyebrow">GERENCIAMENTO</span><h1>Painel administrativo</h1><p>Área de preparação para cadastro de obras, edições, cotações e ofertas.</p></div><span className="pill pill-warning">Acesso de desenvolvimento</span></div>
     <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. No modo de desenvolvimento, os cadastros ficam apenas na memória do processo e podem desaparecer ao reiniciar. Em produção, as gravações estão desativadas até existir autenticação e persistência seguras. Não use para dados reais.</div>
