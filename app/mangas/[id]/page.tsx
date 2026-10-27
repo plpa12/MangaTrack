@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Layers3, Tag } from "lucide-react";
 import { dataRepository } from "@/lib/data";
 import { formatBRL, sortPublicOffers } from "@/lib/money";
+import MangaViewTracker from "./view-tracker";
 
 export default async function MangaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,6 +22,7 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ id
   const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
   const offers = sortPublicOffers(allOffers).filter((offer) => offer.mangaId === manga.id || editions.some((edition) => edition.id === offer.editionId));
   return <div>
+    <MangaViewTracker mangaId={manga.id}/>
     <Link href="/mangas" className="section-link"><ArrowLeft size={14} style={{display:"inline",verticalAlign:"middle",marginRight:6}}/>Voltar ao catálogo</Link>
     <div className="manga-detail-layout">
       <div>{manga.coverUrl ? <img className="manga-detail-cover" src={manga.coverUrl} alt={`Capa de ${manga.title}`}/> : <div className="manga-detail-fallback"><BookOpen size={30}/></div>}</div>
