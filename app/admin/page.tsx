@@ -5,6 +5,7 @@ import MangaForm from "./manga-form";
 import { EditionForm, OfferForm, QuotationForm } from "./data-forms";
 import MangaManagement from "./manga-management";
 import EditionManagement from "./edition-management";
+import OfferManagement from "./offer-management";
 
 export default async function AdminPage() {
   const local = getDataModeLabel().startsWith("Modo local");
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     <section><div className="section-head"><div><h2>Editar ou arquivar edições</h2><p>Atualize os dados editoriais e preserve o histórico ao arquivar.</p></div></div><EditionManagement editions={editions} mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Registrar cotação</h2><p>Somente preços de coleções usadas completas entram no histórico.</p></div></div><div className="panel"><QuotationForm editions={editions}/></div></section>
     <section><div className="section-head"><div><h2>Cadastrar oferta de mangá novo</h2><p>Descontos só aparecem com preço anterior confirmado e evidência.</p></div></div><div className="panel"><OfferForm mangas={mangas} editions={editions}/></div></section>
+    <section><div className="section-head"><div><h2>Gerenciar ofertas</h2><p>Altere o status para publicar, desativar ou marcar ofertas como expiradas.</p></div></div><OfferManagement offers={offers}/></section>
     <div className="section-head"><div><h2>Resumo temporário</h2><p>Os registros abaixo existem apenas enquanto este processo estiver ativo.</p></div></div>
     <div className="admin-grid">
       <div className="panel"><h2><BookOpen size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Obras e edições</h2><p className="muted">{mangas.length} obras e {editions.length} edições no armazenamento temporário.</p><Link href="/mangas" className="button">Ver catálogo</Link></div>

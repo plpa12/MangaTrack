@@ -78,4 +78,5 @@ export interface MangaRepository {
   archiveEdition(id: string): Promise<void>;
   createQuotation(input: CreateQuotationInput): Promise<Quotation>;
   createOffer(input: CreateOfferInput): Promise<Offer>;
+  updateOfferStatus(id: string, status: OfferStatus): Promise<Offer>;
 }

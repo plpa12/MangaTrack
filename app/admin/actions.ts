@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { dataRepository } from "@/lib/data";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema } from "@/lib/validation";
+import type { OfferStatus } from "@/lib/types";
 
 export type MangaActionState = { message: string; success: boolean };
 const localOnly = () => process.env.NODE_ENV === "production" || (process.env.MANGATRACK_DATA_MODE === "supabase" && Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) && Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY));
@@ -158,5 +159,21 @@ export async function archiveEditionAction(_previous: MangaActionState, formData
     await dataRepository.archiveEdition(id);
     refreshDataPages();
     return { success: true, message: "Edição arquivada sem apagar o histórico de cotações." };
+  } catch (error) { return failure(error); }
+}
+
+
+export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  const status = formData.get("status");
+  if (!validId(id)) return { success: false, message: "Identificador da oferta inválido." };
+  if (typeof status !== "string" || !["draft", "published", "disabled", "expired"].includes(status)) {
+    return { success: false, message: "Selecione um status válido para a oferta." };
+  }
+  try {
+    await dataRepository.updateOfferStatus(id, status as OfferStatus);
+    refreshDataPages();
+    return { success: true, message: "Status da oferta atualizado temporariamente; a alteração não é permanente." };
   } catch (error) { return failure(error); }
 }

@@ -93,5 +93,12 @@ export const localData = {
     store.offers.push(offer);
     return offer;
   },
+  updateOfferStatus(id: string, status: Offer["status"]): Offer {
+    const offer = store.offers.find((item) => item.id === id);
+    if (!offer) throw new Error("A oferta não foi encontrada.");
+    offer.status = status;
+    offer.updatedAt = new Date().toISOString();
+    return offer;
+  },
   mode: "local-empty" as const
 };
