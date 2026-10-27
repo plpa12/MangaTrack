@@ -46,12 +46,12 @@ A prévia é um ambiente temporário de desenvolvimento, não um endereço de pr
 2. Copie URL e chave pública para `.env.local` como `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 3. Configure `MANGATRACK_DATA_MODE=supabase` após implementar e validar o adaptador de produção. A mera presença das variáveis não significa que a conexão ou as telas administrativas já estejam operacionais.
 4. Instale Supabase CLI e autentique-se de forma privada.
-5. Execute `supabase link --project-ref SEU_PROJECT_REF` e `supabase db push` para aplicar `supabase/migrations/0001_initial.sql`.
+5. Execute `supabase link --project-ref SEU_PROJECT_REF` e `supabase db push` para aplicar todas as migrações em `supabase/migrations/` em ordem.
 6. Crie os buckets de Storage e configure políticas específicas para capas. Não use a chave `service_role` no navegador.
 7. Desabilite o cadastro público em Authentication. Crie o primeiro usuário administrador pelo fluxo privado do Supabase e atribua `app_metadata.mangatrack_admin=true` por um procedimento confiável no servidor; nunca permita que o próprio usuário defina esse atributo.
 8. Antes de produção, implemente e teste RPCs seguros para estatísticas e resumos de cotações, verifique RLS com contas de visitante e administrador e complete o adaptador de dados.
 
-O esquema inicial está em `supabase/migrations/0001_initial.sql`. Ele não contém dados iniciais. As cotações individuais têm leitura restrita à administração. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos; não habilite a aplicação em produção antes de concluir essa etapa.
+O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos; não habilite a aplicação em produção antes de concluir essa etapa.
 
 ## Segurança
 
@@ -78,4 +78,4 @@ O esquema inicial está em `supabase/migrations/0001_initial.sql`. Ele não cont
 
 ## Estado atual
 
-O projeto contém estrutura Next.js, identidade visual responsiva, páginas de início/catálogo/detalhes/cotações/ofertas/admin, formulários locais para obras/edições/cotações/ofertas, pesquisa no catálogo, filtros de ofertas, gráfico e resumos de preços, cálculos monetários em centavos, validação Zod, testes unitários e migração SQL inicial. A integração Supabase funcional, persistência real, autenticação administrativa, edição/arquivamento completo, estatísticas populares seguras, armazenamento de capas e testes de aceitação completos ainda precisam ser implementados. Não declare a aplicação pronta para produção neste estágio.
+O projeto contém estrutura Next.js, identidade visual responsiva, páginas de início/catálogo/detalhes/cotações/ofertas/admin, formulários locais para obras/edições/cotações/ofertas, edição e arquivamento de obras/edições, gerenciamento de status de ofertas, arquivamento/restauração de cotações, pesquisa no catálogo, filtros de ofertas, gráfico e resumos de preços, cálculos monetários em centavos, validação Zod, testes unitários e migrações SQL versionadas. A integração Supabase funcional, persistência real, autenticação administrativa, estatísticas populares seguras, armazenamento de capas e testes de aceitação completos ainda precisam ser implementados. Não declare a aplicação pronta para produção neste estágio.
