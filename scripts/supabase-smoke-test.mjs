@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
 const required = [
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -51,7 +52,7 @@ try {
     console.log(`PASS: ${label} query completed.`);
   }
 
-  const unique = crypto.randomUUID();
+  const unique = randomUUID();
   const title = `__MANGATRACK_SMOKE_TEST__ ${unique}`;
   const author = "Temporary integration test";
   const { data: inserted, error: insertError } = await supabase
