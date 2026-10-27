@@ -187,7 +187,9 @@ export const supabaseData: MangaRepository = {
   async createOffer(input) {
     const db = await clientOrThrow();
     const { data, error } = await db.from("offers").insert(offerWrite(input)).select(offerSelect).single();
-    fail(error); return mapOffer(data);
+    fail(error);
+    if (!data) throw new Error("O Supabase não retornou a oferta criada.");
+    return mapOffer(data);
   },
   async updateOffer(id, input: UpdateOfferInput) {
     const db = await clientOrThrow();
@@ -196,11 +198,15 @@ export const supabaseData: MangaRepository = {
       product_url: input.productUrl, expires_at: input.expiresAt || null, status: input.status,
       updated_at: new Date().toISOString()
     }).eq("id", id).select(offerSelect).single();
-    fail(error); return mapOffer(data);
+    fail(error);
+    if (!data) throw new Error("O Supabase não retornou a oferta atualizada.");
+    return mapOffer(data);
   },
   async updateOfferStatus(id, status: OfferStatus) {
     const db = await clientOrThrow();
     const { data, error } = await db.from("offers").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select(offerSelect).single();
-    fail(error); return mapOffer(data);
+    fail(error);
+    if (!data) throw new Error("O Supabase não retornou a oferta atualizada.");
+    return mapOffer(data);
   }
 };
