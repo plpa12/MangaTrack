@@ -8,14 +8,17 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const manga = await dataRepository.getManga(id);
   if (!manga) notFound();
-  const [editions, allOffers] = await Promise.all([
+  const [editions, allOffers, publicQuotationValues] = await Promise.all([
     dataRepository.listEditions(manga.id),
-    dataRepository.listOffers()
+    dataRepository.listOffers(),
+    dataRepository.listPublicQuotationValues()
   ]);
   const editionSummaries = await Promise.all(editions.map(async (edition) => ({
     edition,
-    summary: await dataRepository.getQuotationSummary(edition.id)
+    summary: await dataRepository.getQuotationSummary(edition.id),
+    quotations: publicQuotationValues.filter((quotation) => quotation.editionId === edition.id)
   })));
+  const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
   const offers = sortPublicOffers(allOffers).filter((offer) => offer.mangaId === manga.id || editions.some((edition) => edition.id === offer.editionId));
   return <div>
     <Link href="/mangas" className="section-link"><ArrowLeft size={14} style={{display:"inline",verticalAlign:"middle",marginRight:6}}/>Voltar ao catálogo</Link>
@@ -28,7 +31,7 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ id
     </div>
     <section><div className="section-head"><div><h2>Edições cadastradas</h2><p>As edições e seus históricos são acompanhados separadamente.</p></div></div>
       {editions.length === 0 ? <div className="empty-state"><span className="empty-icon"><Layers3 size={20}/></span><h3>Nenhuma edição cadastrada</h3><p>Esta obra pode existir no catálogo mesmo antes de receber edições, cotações ou ofertas.</p></div> :
-        <div className="admin-list">{editionSummaries.map(({edition,summary}) => <div className="admin-item" key={edition.id}><div><strong>{edition.name}</strong><small>{edition.publisher || "Editora não informada"} · {edition.format || "Formato não informado"} · {summary.observationCount} cotações · média {formatBRL(summary.averageCents)}</small></div><Link className="button" href="/quotations">Ver histórico</Link></div>)}</div>}
+        <div className="admin-list">{editionSummaries.map(({edition,summary,quotations}) => <div className="admin-item" key={edition.id}><div><strong>{edition.name}</strong><small>{edition.publisher || "Editora não informada"} · {edition.format || "Formato não informado"} · {summary.observationCount} {summary.observationCount === 1 ? "cotação" : "cotações"} · média {formatBRL(summary.averageCents)}</small>{quotations.length > 0 && <div style={{marginTop:8,display:"grid",gap:6}}>{quotations.map((quotation,index) => <small key={`${quotation.observedAt}-${index}`}>Valor registrado: <strong>{formatBRL(quotation.priceCents)}</strong> · {dateFormatter.format(new Date(quotation.observedAt))}</small>)}</div>}</div><Link className="button" href="/quotations">Ver histórico</Link></div>)}</div>}
     </section>
     <section><div className="section-head"><div><h2>Ofertas relacionadas</h2><p>Promoções publicadas e ainda válidas para esta obra.</p></div><Link href="/offers" className="section-link">Ver todas as ofertas</Link></div>
       {offers.length === 0 ? <div className="empty-state"><span className="empty-icon"><Tag size={20}/></span><h3>Nenhuma oferta relacionada</h3><p>Quando houver promoções válidas associadas a esta obra, elas serão mostradas aqui.</p></div> :

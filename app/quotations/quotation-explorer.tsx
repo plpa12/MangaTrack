@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatBRL } from "@/lib/money";
 import { getQuotationAvailability } from "@/lib/quotation-visibility";
-import type { PriceSummary } from "@/lib/types";
+import type { PriceSummary, PublicQuotationValue } from "@/lib/types";
 
 type EditionOption = { id: string; mangaId: string; name: string };
 type MangaOption = { id: string; title: string };
@@ -14,12 +14,14 @@ export default function QuotationExplorer({
   mangas,
   editions,
   trends,
-  observationCounts
+  observationCounts,
+  quotationValues
 }: {
   mangas: MangaOption[];
   editions: EditionOption[];
   trends: EditionTrend[];
   observationCounts: Record<string, number>;
+  quotationValues: PublicQuotationValue[];
 }) {
   const [editionId, setEditionId] = useState(editions[0]?.id ?? "all");
   const mangaMap = useMemo(() => new Map(mangas.map((manga) => [manga.id, manga])), [mangas]);
@@ -33,6 +35,8 @@ export default function QuotationExplorer({
     observationCount: point.observationCount
   })) ?? [];
   const availability = getQuotationAvailability(selectedObservationCount, chartData.length > 0);
+  const selectedValues = quotationValues.filter((quotation) => quotation.editionId === editionId);
+  const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
 
   return <div>
     <div className="toolbar">
@@ -43,8 +47,14 @@ export default function QuotationExplorer({
           {editions.map((edition) => <option key={edition.id} value={edition.id}>{mangaMap.get(edition.mangaId)?.title ?? "Obra"} — {edition.name}</option>)}
         </select>
       </label>
-      <span className="results-count">{editionId === "all" ? totalObservations : selectedObservationCount} observações</span>
+      <span className="results-count">{editionId === "all" ? totalObservations : selectedObservationCount} {((editionId === "all" ? totalObservations : selectedObservationCount) === 1) ? "observação" : "observações"}</span>
     </div>
+
+    {editionId !== "all" && selectedValues.length > 0 && <section className="panel" style={{marginTop:18}}>
+      <h2>Valores cadastrados</h2>
+      <p className="muted">Preços registrados para coleções completas desta edição. Links e observações internas não são exibidos.</p>
+      <div className="admin-list">{selectedValues.map((quotation, index) => <div className="admin-item" key={`${quotation.editionId}-${quotation.observedAt}-${index}`}><div><strong>{formatBRL(quotation.priceCents)}</strong><small>Data da cotação: {dateFormatter.format(new Date(quotation.observedAt))}</small></div></div>)}</div>
+    </section>}
 
     {editionId !== "all" && availability === "available" && selectedTrend && <>
       <div className="stats-grid">
@@ -55,7 +65,7 @@ export default function QuotationExplorer({
       {selectedTrend.summary.limitedSample && <div className="notice" style={{marginTop:14}}>Amostra limitada: há menos de 5 observações agregadas. Use a média como referência indicativa, não como preço garantido de mercado.</div>}
       <div className="panel chart-panel">
         <h2>Média diária das cotações</h2>
-        <p className="muted">Cada ponto agrega os preços observados no mesmo dia. Anúncios e registros individuais não são enviados para a interface pública.</p>
+        <p className="muted">Cada ponto agrega os preços observados no mesmo dia. Os valores individuais elegíveis aparecem separadamente acima.</p>
         <div style={{width:"100%",height:300,marginTop:18}}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{top:8,right:18,bottom:8,left:4}}>
@@ -83,7 +93,7 @@ export default function QuotationExplorer({
     {editionId !== "all" && availability === "insufficient" && <div className="empty-state">
       <span className="empty-icon">↗</span>
       <h3>Há cotações, mas ainda não há dados públicos suficientes</h3>
-      <p>Existem {selectedObservationCount} cotações elegíveis para esta edição. Para proteger a privacidade, preços e médias diárias só aparecem quando um mesmo dia tem pelo menos três registros. Até lá, os valores indicativos e o gráfico permanecem ocultos.</p>
+      <p>Existe{selectedObservationCount === 1 ? "" : "m"} {selectedObservationCount} cotaç{selectedObservationCount === 1 ? "ão" : "ões"} elegível{selectedObservationCount === 1 ? "" : "s"} para esta edição. A média, os indicadores de preço e o gráfico aparecem quando houver dados agregados suficientes; os valores individuais cadastrados podem ser consultados acima.</p>
     </div>}
   </div>;
 }
