@@ -15,7 +15,10 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
   const parsed = mangaInputSchema.safeParse({
     title: formData.get("title"), author: formData.get("author"), coverUrl: formData.get("coverUrl") || "",
     alternativeTitles: String(formData.get("alternativeTitles") || "").split("\n").map((value) => value.trim()).filter(Boolean),
-    synopsis: formData.get("synopsis") || null
+    synopsis: formData.get("synopsis") || null,
+    chapterCount: formData.get("chapterCount") ? Number(formData.get("chapterCount")) : null,
+    originalVolumeCount: formData.get("originalVolumeCount") ? Number(formData.get("originalVolumeCount")) : null,
+    publicationStatus: formData.get("publicationStatus") || "unknown"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
   try { localData.createManga(parsed.data); refreshDataPages(); return { success: true, message: "Obra criada apenas na memória deste processo. Ela não foi salva permanentemente." }; }
