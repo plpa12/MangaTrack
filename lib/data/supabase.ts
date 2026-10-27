@@ -2,7 +2,7 @@ import "server-only";
 import { summarizeQuotations } from "../money";
 import type {
   CreateEditionInput, CreateMangaInput, CreateOfferInput, CreateQuotationInput,
-  Edition, Manga, MangaRepository, Offer, OfferStatus, Quotation, UpdateEditionInput,
+  Edition, Manga, MangaRepository, Offer, OfferStatus, PublicQuotationTrend, Quotation, UpdateEditionInput,
   UpdateMangaInput, UpdateOfferInput
 } from "../types";
 import { createSupabaseServerClient } from "../supabase/server";
@@ -99,6 +99,16 @@ export const supabaseData: MangaRepository = {
     const { data, error } = await request;
     fail(error);
     return (data ?? []).map(mapQuotation);
+  },
+  async listPublicQuotationTrends(): Promise<PublicQuotationTrend[]> {
+    const db = await clientOrThrow();
+    const { data, error } = await db.rpc("get_public_quotation_trends");
+    fail(error);
+    return (data ?? []).map((row: { edition_id: string; observed_day: string; average_price: number; observation_count: number }) => ({
+      editionId: row.edition_id, observedDay: row.observed_day,
+      averagePriceCents: Math.round(Number(row.average_price) * 100),
+      observationCount: Number(row.observation_count)
+    }));
   },
   async listOffers() {
     const db = await clientOrThrow();
