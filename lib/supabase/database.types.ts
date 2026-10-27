@@ -10,7 +10,7 @@ export interface Database {
       manga_search_stats: { Row: { manga_id: string; selection_count: number; updated_at: string }; Insert: { manga_id: string; selection_count?: number; updated_at?: string }; Update: Partial<Database["public"]["Tables"]["manga_search_stats"]["Insert"]> };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: { get_public_quotation_trends: { Args: Record<PropertyKey, never>; Returns: { edition_id: string; observed_day: string; average_price: number; observation_count: number }[] } };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
