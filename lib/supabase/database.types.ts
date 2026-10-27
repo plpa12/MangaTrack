@@ -1,0 +1,17 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+export interface Database {
+  public: {
+    Tables: {
+      manga: { Row: { id: string; title: string; author: string; cover_path: string | null; alternative_titles: string[]; synopsis: string | null; chapter_count: number | null; original_volume_count: number | null; publication_status: string; archived: boolean; created_at: string; updated_at: string }; Insert: { id?: string; title: string; author: string; cover_path?: string | null; alternative_titles?: string[]; synopsis?: string | null; chapter_count?: number | null; original_volume_count?: number | null; publication_status?: string; archived?: boolean }; Update: Partial<Database["public"]["Tables"]["manga"]["Insert"]> };
+      editions: { Row: { id: string; manga_id: string; name: string; publisher: string | null; format: string | null; isbn: string | null; physical_volume_count: number | null; notes: string | null; archived: boolean; created_at: string; updated_at: string }; Insert: { id?: string; manga_id: string; name: string; publisher?: string | null; format?: string | null; isbn?: string | null; physical_volume_count?: number | null; notes?: string | null; archived?: boolean }; Update: Partial<Database["public"]["Tables"]["editions"]["Insert"]> };
+      quotations: { Row: { id: string; edition_id: string; price: number; observed_at: string; listing_url: string | null; condition_notes: string | null; collection_complete: boolean; created_at: string }; Insert: { id?: string; edition_id: string; price: number; observed_at?: string; listing_url?: string | null; condition_notes?: string | null; collection_complete: true }; Update: Partial<Database["public"]["Tables"]["quotations"]["Insert"]> };
+      offers: { Row: { id: string; title: string; manga_id: string | null; edition_id: string | null; product_type: string; store: string; promotional_price: number; previous_price: number | null; previous_price_confirmed: boolean; previous_price_evidence: string | null; product_url: string; affiliate_url: string | null; image_url: string | null; verified_at: string; expires_at: string | null; status: string; created_at: string; updated_at: string }; Insert: { id?: string; title: string; manga_id?: string | null; edition_id?: string | null; product_type: string; store: string; promotional_price: number; previous_price?: number | null; previous_price_confirmed?: boolean; previous_price_evidence?: string | null; product_url: string; affiliate_url?: string | null; image_url?: string | null; verified_at?: string; expires_at?: string | null; status?: string }; Update: Partial<Database["public"]["Tables"]["offers"]["Insert"]> };
+      manga_search_stats: { Row: { manga_id: string; selection_count: number; updated_at: string }; Insert: { manga_id: string; selection_count?: number; updated_at?: string }; Update: Partial<Database["public"]["Tables"]["manga_search_stats"]["Insert"]> };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+}
