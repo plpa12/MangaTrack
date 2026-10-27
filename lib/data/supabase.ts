@@ -11,6 +11,8 @@ type MangaRow = Database["public"]["Tables"]["manga"]["Row"];
 type EditionRow = Database["public"]["Tables"]["editions"]["Row"];
 type QuotationRow = Database["public"]["Tables"]["quotations"]["Row"];
 type OfferRow = Database["public"]["Tables"]["offers"]["Row"];
+type SafeOfferRow = Omit<OfferRow, "previous_price_evidence"> & { previous_price_evidence?: string | null };
+const offerSelect = "id,title,manga_id,edition_id,product_type,store,promotional_price,previous_price,previous_price_confirmed,product_url,affiliate_url,image_url,verified_at,expires_at,status,created_at,updated_at";
 
 async function clientOrThrow() {
   const client = await createSupabaseServerClient();
@@ -40,12 +42,12 @@ function mapQuotation(row: QuotationRow): Quotation {
     observedAt: row.observed_at, listingUrl: row.listing_url, conditionNotes: row.condition_notes,
     collectionComplete: row.collection_complete, createdAt: row.created_at, archived: row.archived };
 }
-function mapOffer(row: OfferRow): Offer {
+function mapOffer(row: SafeOfferRow): Offer {
   return { id: row.id, title: row.title, mangaId: row.manga_id, editionId: row.edition_id,
     productType: row.product_type as Offer["productType"], store: row.store,
     promotionalPriceCents: Math.round(Number(row.promotional_price) * 100),
     previousPriceCents: row.previous_price == null ? null : Math.round(Number(row.previous_price) * 100),
-    previousPriceConfirmed: row.previous_price_confirmed, previousPriceEvidence: row.previous_price_evidence,
+    previousPriceConfirmed: row.previous_price_confirmed, previousPriceEvidence: row.previous_price_evidence ?? null,
     productUrl: row.product_url, affiliateUrl: row.affiliate_url, imageUrl: row.image_url,
     verifiedAt: row.verified_at, expiresAt: row.expires_at, status: row.status as OfferStatus,
     createdAt: row.created_at, updatedAt: row.updated_at };
@@ -117,7 +119,7 @@ export const supabaseData: MangaRepository = {
   },
   async listOffers() {
     const db = await clientOrThrow();
-    const { data, error } = await db.from("offers").select("*").order("verified_at", { ascending: false });
+    const { data, error } = await db.from("offers").select(offerSelect).order("verified_at", { ascending: false });
     fail(error);
     return (data ?? []).map(mapOffer);
   },
@@ -184,7 +186,7 @@ export const supabaseData: MangaRepository = {
   },
   async createOffer(input) {
     const db = await clientOrThrow();
-    const { data, error } = await db.from("offers").insert(offerWrite(input)).select("*").single();
+    const { data, error } = await db.from("offers").insert(offerWrite(input)).select(offerSelect).single();
     fail(error); return mapOffer(data);
   },
   async updateOffer(id, input: UpdateOfferInput) {
@@ -193,12 +195,12 @@ export const supabaseData: MangaRepository = {
       title: input.title.trim(), store: input.store.trim(), promotional_price: input.promotionalPrice,
       product_url: input.productUrl, expires_at: input.expiresAt || null, status: input.status,
       updated_at: new Date().toISOString()
-    }).eq("id", id).select("*").single();
+    }).eq("id", id).select(offerSelect).single();
     fail(error); return mapOffer(data);
   },
   async updateOfferStatus(id, status: OfferStatus) {
     const db = await clientOrThrow();
-    const { data, error } = await db.from("offers").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select("*").single();
+    const { data, error } = await db.from("offers").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select(offerSelect).single();
     fail(error); return mapOffer(data);
   }
 };
