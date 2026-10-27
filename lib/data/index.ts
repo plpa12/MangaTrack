@@ -35,6 +35,10 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
       observationCount: (await localData.listQuotations(edition.id)).length
     })));
   },
+  async listPublicQuotationValues() {
+    return localData.listQuotations().map(({ editionId, priceCents, observedAt }) => ({ editionId, priceCents, observedAt }))
+      .sort((a, b) => b.observedAt.localeCompare(a.observedAt));
+  },
   async listOffers() { return localData.listOffers(); },
   async getQuotationSummary(editionId) { return summarizeQuotations(localData.listQuotations(editionId)); },
   async createManga(input) { return localData.createManga(input); },
