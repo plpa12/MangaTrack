@@ -2,7 +2,8 @@ import { localData } from "@/lib/data/local";
 import { sortPublicOffers } from "@/lib/money";
 import OffersClient from "./offers-client";
 
-// Keep data access in this Server Component and never serialize drafts to public clients.
+// Never serialize drafts, internal price evidence, or private notes to the public client.
 export default function OffersPage() {
-  return <OffersClient initialOffers={sortPublicOffers(localData.listOffers())} />;
+  const publicOffers = sortPublicOffers(localData.listOffers()).map(({ previousPriceEvidence: _evidence, ...offer }) => offer);
+  return <OffersClient initialOffers={publicOffers} />;
 }
