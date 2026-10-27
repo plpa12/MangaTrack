@@ -30,14 +30,18 @@ async function uploadCover(formData: FormData): Promise<{ url: string | null; er
   };
   const extension = extensions[value.type];
   if (!extension) return { url: null, error: "Formato inválido. Use JPG, PNG, WebP ou AVIF." };
-  const client = await createSupabaseServerClient();
-  if (!client) return { url: null, error: "O armazenamento de capas não está configurado." };
-  const path = `${randomUUID()}.${extension}`;
-  const { error } = await client.storage.from("mangatrack-covers").upload(path, await value.arrayBuffer(), {
-    contentType: value.type, cacheControl: "31536000", upsert: false
-  });
-  if (error) return { url: null, error: "Não foi possível enviar a capa. Verifique a sessão administrativa e as permissões do Storage." };
-  return { url: client.storage.from("mangatrack-covers").getPublicUrl(path).data.publicUrl, error: null };
+  try {
+    const client = await createSupabaseServerClient();
+    if (!client) return { url: null, error: "O armazenamento de capas não está configurado." };
+    const path = `${randomUUID()}.${extension}`;
+    const { error } = await client.storage.from("mangatrack-covers").upload(path, await value.arrayBuffer(), {
+      contentType: value.type, cacheControl: "31536000", upsert: false
+    });
+    if (error) return { url: null, error: "Não foi possível enviar a capa. Verifique a sessão administrativa e as permissões do Storage." };
+    return { url: client.storage.from("mangatrack-covers").getPublicUrl(path).data.publicUrl, error: null };
+  } catch {
+    return { url: null, error: "Não foi possível conectar ao armazenamento de capas." };
+  }
 }
 
 export async function createMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
