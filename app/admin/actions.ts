@@ -177,3 +177,18 @@ export async function updateOfferStatusAction(_previous: MangaActionState, formD
     return { success: true, message: "Status da oferta atualizado temporariamente; a alteração não é permanente." };
   } catch (error) { return failure(error); }
 }
+
+
+export async function setQuotationArchivedAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  const archivedValue = formData.get("archived");
+  if (!validId(id)) return { success: false, message: "Identificador da cotação inválido." };
+  if (archivedValue !== "true" && archivedValue !== "false") return { success: false, message: "Ação de arquivamento inválida." };
+  const archived = archivedValue === "true";
+  try {
+    await dataRepository.setQuotationArchived(id, archived);
+    refreshDataPages();
+    return { success: true, message: archived ? "Cotação arquivada. Ela deixa de influenciar médias públicas, mas permanece no histórico administrativo." : "Cotação restaurada e incluída novamente nos cálculos." };
+  } catch (error) { return failure(error); }
+}

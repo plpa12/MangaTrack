@@ -18,8 +18,8 @@ export const dataRepository: MangaRepository = {
   async listEditions(mangaId) {
     return localData.listEditions(mangaId);
   },
-  async listQuotations(editionId) {
-    return localData.listQuotations(editionId);
+  async listQuotations(editionId, includeArchived) {
+    return localData.listQuotations(editionId, includeArchived);
   },
   async listOffers() {
     return localData.listOffers();
@@ -47,6 +47,9 @@ export const dataRepository: MangaRepository = {
   },
   async createQuotation(input) {
     return localData.createQuotation(input);
+  },
+  async setQuotationArchived(id, archived) {
+    return localData.setQuotationArchived(id, archived);
   },
   async createOffer(input) {
     return localData.createOffer(input);

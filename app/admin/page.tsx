@@ -6,13 +6,14 @@ import { EditionForm, OfferForm, QuotationForm } from "./data-forms";
 import MangaManagement from "./manga-management";
 import EditionManagement from "./edition-management";
 import OfferManagement from "./offer-management";
+import QuotationManagement from "./quotation-management";
 
 export default async function AdminPage() {
   const local = getDataModeLabel().startsWith("Modo local");
   const [mangas, editions, quotations, offers] = await Promise.all([
     dataRepository.listManga(),
     dataRepository.listEditions(),
-    dataRepository.listQuotations(),
+    dataRepository.listQuotations(undefined, true),
     dataRepository.listOffers()
   ]);
   return <div>
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     <section><div className="section-head"><div><h2>Cadastrar edição</h2><p>Uma obra pode ter edições brasileiras, formatos e editoras diferentes.</p></div></div><div className="panel"><EditionForm mangas={mangas}/></div></section>
     <section><div className="section-head"><div><h2>Editar ou arquivar edições</h2><p>Atualize os dados editoriais e preserve o histórico ao arquivar.</p></div></div><EditionManagement editions={editions} mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Registrar cotação</h2><p>Somente preços de coleções usadas completas entram no histórico.</p></div></div><div className="panel"><QuotationForm editions={editions}/></div></section>
+    <section><div className="section-head"><div><h2>Gerenciar cotações</h2><p>Arquive registros inválidos sem apagá-los; cotações arquivadas não entram nas médias.</p></div></div><QuotationManagement quotations={quotations} editions={editions} mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Cadastrar oferta de mangá novo</h2><p>Descontos só aparecem com preço anterior confirmado e evidência.</p></div></div><div className="panel"><OfferForm mangas={mangas} editions={editions}/></div></section>
     <section><div className="section-head"><div><h2>Gerenciar ofertas</h2><p>Altere o status para publicar, desativar ou marcar ofertas como expiradas.</p></div></div><OfferManagement offers={offers}/></section>
     <div className="section-head"><div><h2>Resumo temporário</h2><p>Os registros abaixo existem apenas enquanto este processo estiver ativo.</p></div></div>

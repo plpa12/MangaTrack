@@ -14,7 +14,7 @@ export const localData = {
   },
   getManga(id: string): Manga | null { return store.mangas.find((m) => m.id === id && !m.archived) ?? null; },
   listEditions(mangaId?: string): Edition[] { return store.editions.filter((e) => !e.archived && (!mangaId || e.mangaId === mangaId)); },
-  listQuotations(editionId?: string): Quotation[] { return store.quotations.filter((q) => q.collectionComplete && (!editionId || q.editionId === editionId)); },
+  listQuotations(editionId?: string, includeArchived = false): Quotation[] { return store.quotations.filter((q) => q.collectionComplete && (includeArchived || !q.archived) && (!editionId || q.editionId === editionId)); },
   listOffers(): Offer[] { return [...store.offers]; },
   createManga(input: { title: string; author: string; coverUrl?: string | null; alternativeTitles?: string[]; synopsis?: string | null; chapterCount?: number | null; originalVolumeCount?: number | null; publicationStatus?: Manga["publicationStatus"] }): Manga {
     const now = new Date().toISOString();
@@ -73,8 +73,14 @@ export const localData = {
   },
   createQuotation(input: { editionId: string; price: number; observedAt: string; listingUrl?: string | null; conditionNotes?: string | null; collectionComplete: true }): Quotation {
     if (!store.editions.some((e) => e.id === input.editionId && !e.archived)) throw new Error("A edição selecionada não existe.");
-    const quotation: Quotation = { id: randomUUID(), editionId: input.editionId, priceCents: Math.round(input.price * 100), observedAt: input.observedAt, listingUrl: input.listingUrl || null, conditionNotes: input.conditionNotes || null, collectionComplete: true, createdAt: new Date().toISOString() };
+    const quotation: Quotation = { id: randomUUID(), editionId: input.editionId, priceCents: Math.round(input.price * 100), observedAt: input.observedAt, listingUrl: input.listingUrl || null, conditionNotes: input.conditionNotes || null, collectionComplete: true, createdAt: new Date().toISOString(), archived: false };
     store.quotations.push(quotation);
+    return quotation;
+  },
+  setQuotationArchived(id: string, archived: boolean): Quotation {
+    const quotation = store.quotations.find((item) => item.id === id);
+    if (!quotation) throw new Error("A cotação não foi encontrada.");
+    quotation.archived = archived;
     return quotation;
   },
   createOffer(input: { title: string; mangaId?: string | null; editionId?: string | null; productType: Offer["productType"]; store: string; promotionalPrice: number; previousPrice?: number | null; previousPriceConfirmed: boolean; previousPriceEvidence?: string | null; productUrl: string; affiliateUrl?: string | null; imageUrl?: string | null; verifiedAt: string; expiresAt?: string | null; status: Offer["status"] }): Offer {

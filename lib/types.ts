@@ -16,7 +16,7 @@ export interface Edition {
 export interface Quotation {
   id: string; editionId: string; priceCents: number; observedAt: string;
   listingUrl: string | null; conditionNotes: string | null; collectionComplete: boolean;
-  createdAt: string;
+  createdAt: string; archived: boolean;
 }
 export interface Offer {
   id: string; title: string; mangaId: string | null; editionId: string | null;
@@ -67,7 +67,7 @@ export interface MangaRepository {
   listManga(query?: string): Promise<Manga[]>;
   getManga(id: string): Promise<Manga | null>;
   listEditions(mangaId?: string): Promise<Edition[]>;
-  listQuotations(editionId?: string): Promise<Quotation[]>;
+  listQuotations(editionId?: string, includeArchived?: boolean): Promise<Quotation[]>;
   listOffers(): Promise<Offer[]>;
   getQuotationSummary(editionId: string): Promise<PriceSummary>;
   createManga(input: CreateMangaInput): Promise<Manga>;
@@ -77,6 +77,7 @@ export interface MangaRepository {
   updateEdition(id: string, input: UpdateEditionInput): Promise<Edition>;
   archiveEdition(id: string): Promise<void>;
   createQuotation(input: CreateQuotationInput): Promise<Quotation>;
+  setQuotationArchived(id: string, archived: boolean): Promise<Quotation>;
   createOffer(input: CreateOfferInput): Promise<Offer>;
   updateOfferStatus(id: string, status: OfferStatus): Promise<Offer>;
 }
