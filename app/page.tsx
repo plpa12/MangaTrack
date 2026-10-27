@@ -2,35 +2,29 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Search, Tag, TrendingUp } from "lucide-react";
 import { dataRepository } from "@/lib/data";
 import { formatBRL, sortPublicOffers } from "@/lib/money";
+import { countPublicQuotationValues, summarizePublicQuotationValues } from "@/lib/quotation-statistics";
 
 export default async function HomePage() {
-  const [mangas, offersData, editions, publicTrends] = await Promise.all([
+  const [mangas, offersData, editions, quotationValues] = await Promise.all([
     dataRepository.listManga(),
     dataRepository.listOffers(),
     dataRepository.listEditions(),
-    dataRepository.listPublicQuotationTrends()
+    dataRepository.listPublicQuotationValues()
   ]);
   const offers = sortPublicOffers(offersData).slice(0, 3);
   const recentMangas = [...mangas].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
   const mangaById = new Map(mangas.map((manga) => [manga.id, manga]));
   const quotationSummaries = editions.map((edition) => {
-    const daily = publicTrends.filter((trend) => trend.editionId === edition.id);
-    const observationCount = daily.reduce((sum, trend) => sum + trend.observationCount, 0);
-    const weightedPrice = daily.reduce((sum, trend) => sum + trend.averagePriceCents * trend.observationCount, 0);
-    const latestDay = daily.reduce<string | null>((latest, trend) => !latest || trend.observedDay > latest ? trend.observedDay : latest, null);
-    return {
-      edition,
-      manga: mangaById.get(edition.mangaId),
-      summary: {
-        observationCount,
-        averageCents: observationCount ? Math.round(weightedPrice / observationCount) : null,
-        latestObservedAt: latestDay ? `${latestDay}T12:00:00.000Z` : null
-      }
-    };
+    const summary = summarizePublicQuotationValues(quotationValues, edition.id);
+    return { edition, manga: mangaById.get(edition.mangaId), summary: {
+      observationCount: summary.observationCount,
+      averageCents: summary.averageCents,
+      latestObservedAt: summary.latestObservedAt
+    }};
   }).filter((row) => row.summary.observationCount > 0)
     .sort((a,b) => (b.summary.latestObservedAt ?? "").localeCompare(a.summary.latestObservedAt ?? ""))
     .slice(0, 4);
-  const visibleQuotationCount = publicTrends.reduce((sum, trend) => sum + trend.observationCount, 0);
+  const visibleQuotationCount = countPublicQuotationValues(quotationValues).reduce((sum, row) => sum + row.observationCount, 0);
   return <div>
     <section className="hero"><div className="hero-content">
       <span className="eyebrow">SEU RADAR DE MANGÁS</span>
