@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { dataMode } from "@/lib/data";
+import { isSupabaseAdmin } from "@/lib/supabase/admin";
+import { logoutAction } from "@/app/login/actions";
 import { AlertTriangle, BookOpen, Database, ShieldCheck, Tag, TrendingUp } from "lucide-react";
 import { getDataModeLabel, dataRepository } from "@/lib/data";
 import MangaForm from "./manga-form";
@@ -9,6 +13,7 @@ import OfferManagement from "./offer-management";
 import QuotationManagement from "./quotation-management";
 
 export default async function AdminPage() {
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) redirect("/login");
   const local = getDataModeLabel().startsWith("Modo local");
   const [mangas, editions, quotations, offers] = await Promise.all([
     dataRepository.listManga(),
@@ -17,8 +22,8 @@ export default async function AdminPage() {
     dataRepository.listOffers()
   ]);
   return <div>
-    <div className="page-heading"><div><span className="eyebrow">GERENCIAMENTO</span><h1>Painel administrativo</h1><p>Área de preparação para cadastro de obras, edições, cotações e ofertas.</p></div><span className="pill pill-warning">Acesso de desenvolvimento</span></div>
-    <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. No modo de desenvolvimento, os cadastros ficam apenas na memória do processo e podem desaparecer ao reiniciar. Em produção, as gravações estão desativadas até existir autenticação e persistência seguras. Não use para dados reais.</div>
+    <div className="page-heading"><div><span className="eyebrow">GERENCIAMENTO</span><h1>Painel administrativo</h1><p>Gerencie obras, edições, cotações e ofertas.</p></div>{dataMode === "supabase" ? <form action={logoutAction}><button className="button" type="submit">Sair da conta</button></form> : <span className="pill pill-warning">Acesso de desenvolvimento</span>}</div>
+    {dataMode === "supabase" ? <div className="notice"><ShieldCheck size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7}}/><strong>Supabase conectado.</strong> As operações são autorizadas pelo Supabase Auth e pelas políticas RLS do banco.</div> : <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Modo de desenvolvimento:</strong> os cadastros ficam apenas na memória do processo e podem desaparecer ao reiniciar. Não use para dados reais.</div>}
     <div className="stats-grid">
       <div className="stat-card"><span className="stat-icon"><Database size={20}/></span><div><small>Modo de dados</small><strong style={{fontSize:15}}>{local ? "Local temporário" : "Supabase não ativo"}</strong></div></div>
       <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras / edições</small><strong>{mangas.length} / {editions.length}</strong></div></div>
