@@ -3,26 +3,32 @@ import { AlertTriangle, BookOpen, Database, ShieldCheck, Tag, TrendingUp } from 
 import { getDataModeLabel } from "@/lib/data";
 import { localData } from "@/lib/data/local";
 import MangaForm from "./manga-form";
+import { EditionForm, OfferForm, QuotationForm } from "./data-forms";
 
 export default function AdminPage() {
   const local = getDataModeLabel().startsWith("Modo local");
   const mangas = localData.listManga();
+  const editions = localData.listEditions();
+  const quotations = localData.listQuotations();
+  const offers = localData.listOffers();
   return <div>
     <div className="page-heading"><div><span className="eyebrow">GERENCIAMENTO</span><h1>Painel administrativo</h1><p>Área de preparação para cadastro de obras, edições, cotações e ofertas.</p></div><span className="pill pill-warning">Acesso de desenvolvimento</span></div>
-    <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. O cadastro de obras funciona apenas no modo local e mantém os dados na memória do processo; eles não são persistidos e podem desaparecer ao reiniciar.</div>
+    <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. Cadastros funcionam somente na memória do processo e podem desaparecer ao reiniciar ou em outro servidor. Não use para dados reais.</div>
     <div className="stats-grid">
-      <div className="stat-card"><span className="stat-icon"><Database size={20}/></span><div><small>Modo de dados</small><strong style={{fontSize:15}}>{local ? "Local temporário" : "Supabase"}</strong></div></div>
-      <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras disponíveis</small><strong>{mangas.length}</strong></div></div>
+      <div className="stat-card"><span className="stat-icon"><Database size={20}/></span><div><small>Modo de dados</small><strong style={{fontSize:15}}>{local ? "Local temporário" : "Supabase não ativo"}</strong></div></div>
+      <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras / edições</small><strong>{mangas.length} / {editions.length}</strong></div></div>
       <div className="stat-card"><span className="stat-icon"><ShieldCheck size={20}/></span><div><small>Autenticação</small><strong style={{fontSize:15}}>Pendente</strong></div></div>
     </div>
-    <div className="section-head"><div><h2>Cadastrar obra</h2><p>Título e autor são obrigatórios; capa e dados editoriais podem ser adicionados depois.</p></div></div>
-    <div className="panel"><MangaForm /></div>
-    <div className="section-head"><div><h2>Áreas de gerenciamento</h2><p>As outras operações serão ativadas após implementação de persistência e autorização seguras.</p></div></div>
+    <section><div className="section-head"><div><h2>Cadastrar obra</h2><p>Título e autor são obrigatórios; capa e dados editoriais podem ser adicionados depois.</p></div></div><div className="panel"><MangaForm /></div></section>
+    <section><div className="section-head"><div><h2>Cadastrar edição</h2><p>Uma obra pode ter edições brasileiras, formatos e editoras diferentes.</p></div></div><div className="panel"><EditionForm mangas={mangas}/></div></section>
+    <section><div className="section-head"><div><h2>Registrar cotação</h2><p>Somente preços de coleções usadas completas entram no histórico.</p></div></div><div className="panel"><QuotationForm editions={editions}/></div></section>
+    <section><div className="section-head"><div><h2>Cadastrar oferta de mangá novo</h2><p>Descontos só aparecem com preço anterior confirmado e evidência.</p></div></div><div className="panel"><OfferForm mangas={mangas} editions={editions}/></div></section>
+    <div className="section-head"><div><h2>Resumo temporário</h2><p>Os registros abaixo existem apenas enquanto este processo estiver ativo.</p></div></div>
     <div className="admin-grid">
-      <div className="panel"><h2><BookOpen size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Obras e edições</h2><p className="muted">O cadastro local de obras está disponível para testar a interface. Edições e arquivamento ainda não estão implementados.</p><Link href="/mangas" className="button">Ver catálogo</Link></div>
-      <div className="panel"><h2><TrendingUp size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Cotações</h2><p className="muted">Somente coleções usadas completas serão válidas. Os registros detalhados serão restritos à administração.</p><Link href="/quotations" className="button">Ver cotações</Link></div>
-      <div className="panel"><h2><Tag size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Ofertas</h2><p className="muted">Rascunhos, publicação manual, evidência de preço anterior e expiração ainda precisam de formulários e persistência.</p><Link href="/offers" className="button">Ver ofertas</Link></div>
-      <div className="panel"><h2><ShieldCheck size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Configuração</h2><p className="muted">O login real exige Supabase Auth, autorização no servidor e políticas RLS verificadas.</p><Link className="button" href="/login">Configurar acesso</Link></div>
+      <div className="panel"><h2><BookOpen size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Obras e edições</h2><p className="muted">{mangas.length} obras e {editions.length} edições no armazenamento temporário.</p><Link href="/mangas" className="button">Ver catálogo</Link></div>
+      <div className="panel"><h2><TrendingUp size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Cotações</h2><p className="muted">{quotations.length} registros de coleções completas.</p><Link href="/quotations" className="button">Ver cotações</Link></div>
+      <div className="panel"><h2><Tag size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Ofertas</h2><p className="muted">{offers.length} ofertas cadastradas, incluindo rascunhos.</p><Link href="/offers" className="button">Ver ofertas</Link></div>
+      <div className="panel"><h2><ShieldCheck size={17} style={{display:"inline",verticalAlign:"middle",marginRight:8}}/>Configuração</h2><p className="muted">O login real exige Supabase Auth, autorização no servidor e políticas RLS.</p><Link className="button" href="/login">Configurar acesso</Link></div>
     </div>
   </div>;
 }
