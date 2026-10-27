@@ -37,10 +37,18 @@ export async function createEditionAction(_previous: MangaActionState, formData:
 
 export async function createQuotationAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: "A gravação pelo Supabase ainda não foi ativada." };
+  let observedAt: string;
+  try {
+    const rawDate = String(formData.get("observedAt") || "");
+    if (!rawDate) throw new Error("missing date");
+    observedAt = new Date(rawDate).toISOString();
+  } catch {
+    return { success: false, message: "Informe uma data e hora válidas para a cotação." };
+  }
   const parsed = quotationInputSchema.safeParse({
     editionId: formData.get("editionId"), price: Number(formData.get("price")),
-    observedAt: new Date(String(formData.get("observedAt") || "")).toISOString(),
-    listingUrl: formData.get("listingUrl") || "", conditionNotes: formData.get("conditionNotes") || null,
+    observedAt, listingUrl: formData.get("listingUrl") || "",
+    conditionNotes: formData.get("conditionNotes") || null,
     collectionComplete: formData.get("collectionComplete") === "on"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Informe uma cotação válida." };
