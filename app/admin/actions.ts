@@ -4,14 +4,17 @@ import { localData } from "@/lib/data/local";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema } from "@/lib/validation";
 
 export type MangaActionState = { message: string; success: boolean };
-const localOnly = () => process.env.MANGATRACK_DATA_MODE === "supabase" && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const localOnly = () => process.env.NODE_ENV === "production" || (process.env.MANGATRACK_DATA_MODE === "supabase" && Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) && Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY));
+const localOnlyMessage = () => process.env.NODE_ENV === "production"
+  ? "Cadastros desativados em produção enquanto a autenticação e a persistência seguras não estiverem implementadas."
+  : "A gravação pelo Supabase ainda não foi ativada. Nenhum dado foi salvo.";
 const refreshDataPages = () => {
   for (const path of ["/", "/mangas", "/quotations", "/offers", "/admin"]) revalidatePath(path);
 };
 const failure = (error: unknown): MangaActionState => ({ success: false, message: error instanceof Error ? error.message : "Confira os campos informados e tente novamente." });
 
 export async function createMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
-  if (localOnly()) return { success: false, message: "A gravação pelo Supabase ainda não foi ativada. Nenhum dado foi salvo." };
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
   const parsed = mangaInputSchema.safeParse({
     title: formData.get("title"), author: formData.get("author"), coverUrl: formData.get("coverUrl") || "",
     alternativeTitles: String(formData.get("alternativeTitles") || "").split("\n").map((value) => value.trim()).filter(Boolean),
@@ -26,7 +29,7 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
 }
 
 export async function createEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
-  if (localOnly()) return { success: false, message: "A gravação pelo Supabase ainda não foi ativada." };
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
   const parsed = editionInputSchema.safeParse({
     mangaId: formData.get("mangaId"), name: formData.get("name"), publisher: formData.get("publisher") || null,
     format: formData.get("format") || null, isbn: formData.get("isbn") || null,
