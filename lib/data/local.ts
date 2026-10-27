@@ -42,6 +42,9 @@ export const localData = {
     return quotation;
   },
   createOffer(input: { title: string; mangaId?: string | null; editionId?: string | null; productType: Offer["productType"]; store: string; promotionalPrice: number; previousPrice?: number | null; previousPriceConfirmed: boolean; previousPriceEvidence?: string | null; productUrl: string; affiliateUrl?: string | null; imageUrl?: string | null; verifiedAt: string; expiresAt?: string | null; status: Offer["status"] }): Offer {
+    if (input.mangaId && !this.getManga(input.mangaId)) throw new Error("A obra selecionada para a oferta não existe.");
+    if (input.editionId && !store.editions.some((edition) => edition.id === input.editionId && !edition.archived)) throw new Error("A edição selecionada para a oferta não existe.");
+    if (input.mangaId && input.editionId && store.editions.some((edition) => edition.id === input.editionId && edition.mangaId !== input.mangaId)) throw new Error("A edição selecionada não pertence à obra escolhida.");
     const now = new Date().toISOString();
     const offer: Offer = {
       id: randomUUID(), title: input.title.trim(), mangaId: input.mangaId || null, editionId: input.editionId || null,
