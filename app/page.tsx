@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Search, Tag, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Flame, Search, Tag, TrendingUp } from "lucide-react";
 import { dataRepository } from "@/lib/data";
 import { formatBRL, sortPublicOffers } from "@/lib/money";
 import { countPublicQuotationValues, summarizePublicQuotationValues } from "@/lib/quotation-statistics";
 
 export default async function HomePage() {
-  const [mangas, offersData, editions, quotationValues] = await Promise.all([
+  const [mangas, offersData, editions, quotationValues, popularMangas] = await Promise.all([
     dataRepository.listManga(),
     dataRepository.listOffers(),
     dataRepository.listEditions(),
-    dataRepository.listPublicQuotationValues()
+    dataRepository.listPublicQuotationValues(),
+    dataRepository.listPopularManga(5)
   ]);
   const offers = sortPublicOffers(offersData).slice(0, 3);
   const recentMangas = [...mangas].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
@@ -43,6 +44,7 @@ export default async function HomePage() {
     <section><div className="section-head"><div><h2>Obras adicionadas recentemente</h2><p>Últimas obras cadastradas no catálogo.</p></div><Link href="/mangas" className="section-link">Ver mangás <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div>
       {recentMangas.length ? <div className="manga-grid">{recentMangas.map((manga) => <Link className="manga-card" href={`/mangas/${manga.id}`} key={manga.id}>{manga.coverUrl ? <img className="manga-cover" src={manga.coverUrl} alt={`Capa de ${manga.title}`} loading="lazy"/> : <div className="cover-placeholder"><BookOpen size={25}/></div>}<strong>{manga.title}</strong><span>{manga.author}</span></Link>)}</div> : <div className="empty-state"><span className="empty-icon"><Search size={20}/></span><h3>Nenhuma obra no catálogo ainda</h3><p>O catálogo começa vazio para evitar informações fictícias. As obras cadastradas serão exibidas aqui.</p><Link href="/mangas" className="button">Abrir catálogo</Link></div>}
     </section>
+    {popularMangas.length > 0 && <section><div className="section-head"><div><h2><Flame size={19} style={{display:"inline",verticalAlign:"middle",marginRight:7}}/>Mangás populares</h2><p>Obras mais consultadas pelos visitantes.</p></div><Link href="/mangas" className="section-link">Ver catálogo <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div><div className="manga-grid">{popularMangas.map((manga) => <Link className="manga-card" href={`/mangas/${manga.id}`} key={manga.id}>{manga.coverUrl ? <img className="manga-cover" src={manga.coverUrl} alt={`Capa de ${manga.title}`} loading="lazy"/> : <div className="cover-placeholder"><BookOpen size={25}/></div>}<strong>{manga.title}</strong><span>{manga.author}</span><small>{manga.searchCount.toLocaleString("pt-BR")} consultas</small></Link>)}</div></section>}
     <section><div className="section-head"><div><h2>Ofertas em destaque</h2><p>Promoções publicadas e ainda válidas.</p></div><Link href="/offers" className="section-link">Ver ofertas <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div>
       {offers.length ? <div className="offer-grid">{offers.map((offer) => <article className="offer-card" key={offer.id}>{offer.imageUrl ? <img className="offer-image" src={offer.imageUrl} alt="" loading="lazy"/> : <div className="offer-image offer-image-placeholder"><Tag size={24}/></div>}<div className="offer-card-body"><span className="pill">{offer.store}</span><h2>{offer.title}</h2><div className="offer-prices"><strong>{formatBRL(offer.promotionalPriceCents)}</strong>{offer.discountPercent !== null && offer.previousPriceCents && <span className="discount-pill">-{offer.discountPercent.toLocaleString("pt-BR")}%</span>}</div><a className="button button-primary offer-open" href={offer.affiliateUrl || offer.productUrl} target="_blank" rel="noopener noreferrer">Ver oferta</a></div></article>)}</div> : <div className="empty-state"><span className="empty-icon"><Tag size={20}/></span><h3>Nenhuma oferta publicada</h3><p>Ofertas só aparecem depois de verificadas, publicadas e ainda válidas.</p></div>}
     </section>
