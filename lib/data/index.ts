@@ -30,6 +30,12 @@ export const dataRepository: MangaRepository = {
   async createManga(input) {
     return localData.createManga(input);
   },
+  async updateManga(id, input) {
+    return localData.updateManga(id, input);
+  },
+  async archiveManga(id) {
+    localData.archiveManga(id);
+  },
   async createEdition(input) {
     return localData.createEdition(input);
   },

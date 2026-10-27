@@ -87,3 +87,42 @@ export async function createOfferAction(_previous: MangaActionState, formData: F
   try { await dataRepository.createOffer(parsed.data); refreshDataPages(); return { success: true, message: "Oferta criada temporariamente. Só ofertas publicadas e válidas aparecem ao público." }; }
   catch (error) { return failure(error); }
 }
+
+
+function mangaFormData(formData: FormData) {
+  return {
+    title: formData.get("title"), author: formData.get("author"), coverUrl: formData.get("coverUrl") || "",
+    alternativeTitles: String(formData.get("alternativeTitles") || "").split("\\n").map((value) => value.trim()).filter(Boolean),
+    synopsis: formData.get("synopsis") || null,
+    chapterCount: formData.get("chapterCount") ? Number(formData.get("chapterCount")) : null,
+    originalVolumeCount: formData.get("originalVolumeCount") ? Number(formData.get("originalVolumeCount")) : null,
+    publicationStatus: formData.get("publicationStatus") || "unknown"
+  };
+}
+
+const validId = (value: FormDataEntryValue | null): value is string =>
+  typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+export async function updateMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
+  const parsed = mangaInputSchema.safeParse(mangaFormData(formData));
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
+  try {
+    await dataRepository.updateManga(id, parsed.data);
+    refreshDataPages();
+    return { success: true, message: "Alterações aplicadas temporariamente; elas não foram salvas permanentemente." };
+  } catch (error) { return failure(error); }
+}
+
+export async function archiveMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
+  try {
+    await dataRepository.archiveManga(id);
+    refreshDataPages();
+    return { success: true, message: "Obra arquivada temporariamente. Ela deixa de aparecer no catálogo." };
+  } catch (error) { return failure(error); }
+}

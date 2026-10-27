@@ -28,6 +28,27 @@ export const localData = {
     store.mangas.push(manga);
     return manga;
   },
+  updateManga(id: string, input: { title: string; author: string; coverUrl?: string | null; alternativeTitles?: string[]; synopsis?: string | null; chapterCount?: number | null; originalVolumeCount?: number | null; publicationStatus?: Manga["publicationStatus"] }): Manga {
+    const manga = store.mangas.find((item) => item.id === id && !item.archived);
+    if (!manga) throw new Error("A obra não foi encontrada ou já está arquivada.");
+    const normalizedTitle = input.title.trim().toLocaleLowerCase("pt-BR");
+    if (store.mangas.some((item) => item.id !== id && !item.archived && item.title.toLocaleLowerCase("pt-BR") === normalizedTitle)) {
+      throw new Error("Já existe uma obra ativa com esse título.");
+    }
+    Object.assign(manga, {
+      title: input.title.trim(), author: input.author.trim(), coverUrl: input.coverUrl || null,
+      alternativeTitles: input.alternativeTitles ?? [], synopsis: input.synopsis || null,
+      chapterCount: input.chapterCount ?? null, originalVolumeCount: input.originalVolumeCount ?? null,
+      publicationStatus: input.publicationStatus ?? "unknown", updatedAt: new Date().toISOString()
+    });
+    return manga;
+  },
+  archiveManga(id: string): void {
+    const manga = store.mangas.find((item) => item.id === id && !item.archived);
+    if (!manga) throw new Error("A obra não foi encontrada ou já está arquivada.");
+    manga.archived = true;
+    manga.updatedAt = new Date().toISOString();
+  },
   createEdition(input: { mangaId: string; name: string; publisher?: string | null; format?: string | null; isbn?: string | null; physicalVolumeCount?: number | null; notes?: string | null }): Edition {
     if (!this.getManga(input.mangaId)) throw new Error("A obra selecionada não existe.");
     if (store.editions.some((e) => e.mangaId === input.mangaId && e.name.toLocaleLowerCase("pt-BR") === input.name.trim().toLocaleLowerCase("pt-BR") && !e.archived)) throw new Error("Já existe uma edição com esse nome para esta obra.");
