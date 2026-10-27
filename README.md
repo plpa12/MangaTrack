@@ -20,7 +20,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Acesse http://localhost:3000. O modo local funciona sem credenciais do Supabase. O adaptador atual é deliberadamente vazio e não oferece persistência; operações administrativas de gravação ainda não estão habilitadas. Não há dados fictícios pré-carregados.
+Acesse http://localhost:3000. O modo local funciona sem credenciais do Supabase e começa sem dados fictícios. Os cadastros administrativos atuais funcionam apenas na memória do processo: servem para testar fluxos e interface, não são persistentes nem seguros para uso público.
 
 ## Scripts
 
@@ -30,9 +30,15 @@ Acesse http://localhost:3000. O modo local funciona sem credenciais do Supabase.
 - `npm run lint`: lint
 - `npm test`: testes unitários
 
+## Pré-visualização no navegador
+
+Abra [MangaTrack no StackBlitz](https://stackblitz.com/github/plpa12/MangaTrack?startScript=dev). O projeto será importado no navegador e o comando de desenvolvimento será iniciado; a prévia pode levar alguns instantes para instalar as dependências. O arquivo `.stackblitzrc` seleciona o modo local.
+
+A prévia é um ambiente temporário de desenvolvimento, não um endereço de produção. Os dados cadastrados podem desaparecer ao reiniciar o ambiente, não são compartilhados entre instâncias e não devem ser considerados persistentes.
+
 ## Modo de desenvolvimento
 
-`MANGATRACK_DATA_MODE=local` é o padrão. A interface apresenta um aviso para que dados locais não sejam confundidos com dados persistentes. O catálogo inicial é vazio. O painel administrativo é apenas uma área informativa e **não é autenticação de produção**; não use para cadastrar dados reais.
+`MANGATRACK_DATA_MODE=local` é o padrão. A interface apresenta um aviso para que dados locais não sejam confundidos com dados persistentes. O catálogo inicial é vazio. O painel administrativo permite testar cadastro de obras, edições, cotações e ofertas, mas **não possui autenticação de produção** e o armazenamento é apenas em memória; não use para dados reais.
 
 ## Conectar Supabase posteriormente
 
@@ -72,4 +78,4 @@ O esquema inicial está em `supabase/migrations/0001_initial.sql`. Ele não cont
 
 ## Estado atual
 
-A primeira etapa contém estrutura Next.js, identidade visual responsiva, páginas-base, tipos de domínio, cálculos monetários em centavos, filtros de ofertas, adaptador local vazio e migração SQL inicial. O catálogo, os formulários de escrita, a integração Supabase funcional, autenticação administrativa, gráficos ligados a dados e estatísticas seguras ainda precisam ser implementados e verificados. Não declare a aplicação pronta para produção neste estágio.
+O projeto contém estrutura Next.js, identidade visual responsiva, páginas de início/catálogo/detalhes/cotações/ofertas/admin, formulários locais para obras/edições/cotações/ofertas, pesquisa no catálogo, filtros de ofertas, gráfico e resumos de preços, cálculos monetários em centavos, validação Zod, testes unitários e migração SQL inicial. A integração Supabase funcional, persistência real, autenticação administrativa, edição/arquivamento completo, estatísticas populares seguras, armazenamento de capas e testes de aceitação completos ainda precisam ser implementados. Não declare a aplicação pronta para produção neste estágio.
