@@ -26,6 +26,9 @@ export interface Offer {
   imageUrl: string | null; verifiedAt: string; expiresAt: string | null;
   status: OfferStatus; createdAt: string; updatedAt: string;
 }
+export interface PublicQuotationTrend {
+  editionId: string; observedDay: string; averagePriceCents: number; observationCount: number;
+}
 export interface PriceSummary {
   averageCents: number | null; goodPriceCents: number | null; greatPriceCents: number | null;
   observationCount: number; latestObservedAt: string | null; limitedSample: boolean;
@@ -72,6 +75,7 @@ export interface MangaRepository {
   getManga(id: string): Promise<Manga | null>;
   listEditions(mangaId?: string): Promise<Edition[]>;
   listQuotations(editionId?: string, includeArchived?: boolean): Promise<Quotation[]>;
+  listPublicQuotationTrends(): Promise<PublicQuotationTrend[]>;
   listOffers(): Promise<Offer[]>;
   getQuotationSummary(editionId: string): Promise<PriceSummary>;
   createManga(input: CreateMangaInput): Promise<Manga>;
