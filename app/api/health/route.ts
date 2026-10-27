@@ -17,7 +17,8 @@ export async function GET() {
       dataRepository.listManga(),
       dataRepository.listEditions(),
       dataRepository.listOffers(),
-      dataRepository.listPublicQuotationTrends()
+      dataRepository.listPublicQuotationTrends(),
+      dataRepository.listPublicQuotationObservationCounts()
     ]);
 
     const supabase = await createSupabaseServerClient();
@@ -33,6 +34,7 @@ export async function GET() {
       editionRead: results[1].status === "fulfilled",
       offerRead: results[2].status === "fulfilled",
       quotationTrendsRpc: results[3].status === "fulfilled",
+      quotationCountsRpc: results[4].status === "fulfilled",
       offerEvidenceProtected
     };
     const healthy = Object.values(checks).every(Boolean);
@@ -43,7 +45,7 @@ export async function GET() {
         checks,
         failures: results.flatMap((result, index) =>
           result.status === "rejected"
-            ? [{ check: ["mangaRead", "editionRead", "offerRead", "quotationTrendsRpc"][index], reason: result.reason }]
+            ? [{ check: ["mangaRead", "editionRead", "offerRead", "quotationTrendsRpc", "quotationCountsRpc"][index], reason: result.reason }]
             : []
         )
       });
