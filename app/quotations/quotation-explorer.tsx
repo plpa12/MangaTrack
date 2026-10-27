@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatBRL } from "@/lib/money";
 import { getQuotationAvailability } from "@/lib/quotation-visibility";
-import type { PriceSummary } from "@/lib/types";
+import type { PriceSummary, PublicQuotationValue } from "@/lib/types";
 
 type EditionOption = { id: string; mangaId: string; name: string };
 type MangaOption = { id: string; title: string };
@@ -65,7 +65,7 @@ export default function QuotationExplorer({
       {selectedTrend.summary.limitedSample && <div className="notice" style={{marginTop:14}}>Amostra limitada: há menos de 5 observações agregadas. Use a média como referência indicativa, não como preço garantido de mercado.</div>}
       <div className="panel chart-panel">
         <h2>Média diária das cotações</h2>
-        <p className="muted">Cada ponto agrega os preços observados no mesmo dia. Anúncios e registros individuais não são enviados para a interface pública.</p>
+        <p className="muted">Cada ponto agrega os preços observados no mesmo dia. Os valores individuais elegíveis aparecem separadamente acima.</p>
         <div style={{width:"100%",height:300,marginTop:18}}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{top:8,right:18,bottom:8,left:4}}>
