@@ -13,7 +13,7 @@ export default function AdminPage() {
   const offers = localData.listOffers();
   return <div>
     <div className="page-heading"><div><span className="eyebrow">GERENCIAMENTO</span><h1>Painel administrativo</h1><p>Área de preparação para cadastro de obras, edições, cotações e ofertas.</p></div><span className="pill pill-warning">Acesso de desenvolvimento</span></div>
-    <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. Cadastros funcionam somente na memória do processo e podem desaparecer ao reiniciar ou em outro servidor. Não use para dados reais.</div>
+    <div className="notice"><AlertTriangle size={16} style={{display:"inline",verticalAlign:"middle",marginRight:7,color:"#e8c46b"}}/><strong>Importante:</strong> este painel ainda não tem autenticação de produção. No modo de desenvolvimento, os cadastros ficam apenas na memória do processo e podem desaparecer ao reiniciar. Em produção, as gravações estão desativadas até existir autenticação e persistência seguras. Não use para dados reais.</div>
     <div className="stats-grid">
       <div className="stat-card"><span className="stat-icon"><Database size={20}/></span><div><small>Modo de dados</small><strong style={{fontSize:15}}>{local ? "Local temporário" : "Supabase não ativo"}</strong></div></div>
       <div className="stat-card"><span className="stat-icon"><BookOpen size={20}/></span><div><small>Obras / edições</small><strong>{mangas.length} / {editions.length}</strong></div></div>
