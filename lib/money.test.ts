@@ -4,7 +4,7 @@ import type { Offer, Quotation } from "./types";
 
 const quote = (priceCents: number, date: string, complete = true): Quotation => ({
   id: date, editionId: "edition-a", priceCents, observedAt: date, listingUrl: null,
-  conditionNotes: null, collectionComplete: complete, createdAt: date
+  conditionNotes: null, collectionComplete: complete, createdAt: date, archived: false
 });
 const offer = (overrides: Partial<Offer> = {}): Offer => ({
   id: "offer", title: "Produto", mangaId: null, editionId: null, productType: "volume",
@@ -27,6 +27,9 @@ describe("summarizeQuotations", () => {
   it("flags fewer than five valid observations", () => {
     expect(summarizeQuotations(Array.from({length: 4}, (_, i) => quote(1000, `2026-01-0${i + 1}`))).limitedSample).toBe(true);
     expect(summarizeQuotations(Array.from({length: 5}, (_, i) => quote(1000, `2026-01-0${i + 1}`))).limitedSample).toBe(false);
+  });
+  it("ignores archived quotations from price calculations", () => {
+    expect(summarizeQuotations([quote(10000, "2026-01-01"), { ...quote(20000, "2026-01-02"), archived: true }]).averageCents).toBe(10000);
   });
   it("returns an empty summary with no valid observations", () => {
     expect(summarizeQuotations([quote(1000, "2026-01-01", false)]).averageCents).toBeNull();

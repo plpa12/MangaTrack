@@ -1,7 +1,7 @@
 import type { Offer, OfferView, PriceSummary, Quotation } from "./types";
 
 export function summarizeQuotations(rows: Quotation[]): PriceSummary {
-  const valid = rows.filter((row) => row.collectionComplete && Number.isSafeInteger(row.priceCents) && row.priceCents > 0);
+  const valid = rows.filter((row) => row.collectionComplete && !row.archived && Number.isSafeInteger(row.priceCents) && row.priceCents > 0);
   if (!valid.length) return { averageCents: null, goodPriceCents: null, greatPriceCents: null, observationCount: 0, latestObservedAt: null, limitedSample: true };
   // All currency calculations use integer cents / BigInt to avoid binary floating-point drift.
   const sum = valid.reduce((total, row) => total + BigInt(row.priceCents), 0n);
