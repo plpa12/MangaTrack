@@ -1,8 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ExternalLink, Tag } from "lucide-react";
-import { formatBRL, sortPublicOffers } from "@/lib/money";
+import { formatBRL } from "@/lib/money";
 import type { Offer, ProductType } from "@/lib/types";
+type PublicOffer = Omit<Offer, "previousPriceEvidence"> & { discountPercent: number | null };
 
 const types: { value: ProductType | "all"; label: string }[] = [
   { value: "all", label: "Todos os tipos" }, { value: "volume", label: "Volume individual" },
@@ -11,11 +12,11 @@ const types: { value: ProductType | "all"; label: string }[] = [
 ];
 const typeLabel = (type: ProductType) => types.find((item) => item.value === type)?.label ?? "Outro";
 
-export default function OffersClient({ initialOffers }: { initialOffers: Offer[] }) {
+export default function OffersClient({ initialOffers }: { initialOffers: PublicOffer[] }) {
   const [type, setType] = useState<ProductType | "all">("all");
   const [store, setStore] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const offers = useMemo(() => sortPublicOffers(initialOffers).filter((o) =>
+  const offers = useMemo(() => initialOffers.filter((o) =>
     (type === "all" || o.productType === type) &&
     (!store.trim() || o.store.toLocaleLowerCase("pt-BR").includes(store.trim().toLocaleLowerCase("pt-BR"))) &&
     (!maxPrice || o.promotionalPriceCents <= Math.round(Number(maxPrice) * 100))
