@@ -29,7 +29,7 @@ try {
     email: process.env.SUPABASE_SMOKE_TEST_EMAIL,
     password: process.env.SUPABASE_SMOKE_TEST_PASSWORD
   });
-  if (signInError || !signInData.user) throw new Error("Admin sign-in failed. Check the test account credentials.");
+  if (signInError || !signInData.user) throw new Error(`Admin sign-in failed: ${signInError?.message ?? "Supabase returned no user."}`);
   if (signInData.user.app_metadata?.mangatrack_admin !== true) {
     await supabase.auth.signOut();
     throw new Error("The signed-in account does not have app_metadata.mangatrack_admin=true.");
