@@ -66,7 +66,7 @@ Para executá-lo em uma cópia local do projeto, configure as variáveis abaixo 
 - `SUPABASE_SMOKE_TEST_EMAIL`
 - `SUPABASE_SMOKE_TEST_PASSWORD`
 
-Depois rode `npm run test:supabase`. Não coloque a senha em arquivos versionados, não a envie pelo chat e não configure a senha de teste na Vercel. Se a limpeza falhar, o script sinaliza isso; remova apenas o registro de teste identificado no resultado, nunca registros existentes. O teste não foi executado automaticamente no deploy, pois exige credenciais de um administrador.
+Depois rode `npm run test:supabase`. Não coloque a senha em arquivos versionados, não a envie pelo chat e não configure a senha de teste na Vercel. Se a limpeza falhar, o script sinaliza isso; remova apenas o registro de teste identificado no resultado, nunca registros existentes. O teste não foi executado automaticamente no deploy, pois exige credenciais de um administrador. Alternativamente, configure os quatro valores como **GitHub Actions repository secrets** com os mesmos nomes e execute `Actions → Supabase integration smoke test → Run workflow`; marque a confirmação de gravação temporária. O workflow é manual e não roda durante os deploys normais.
 
 ## Segurança
 
