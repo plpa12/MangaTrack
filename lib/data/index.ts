@@ -24,7 +24,7 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
       bucket.count += 1;
       buckets.set(key, bucket);
     }
-    return [...buckets.values()].map(({ editionId, observedDay, totalCents, count }) => ({
+    return [...buckets.values()].filter(({ count }) => count >= 3).map(({ editionId, observedDay, totalCents, count }) => ({
       editionId, observedDay, averagePriceCents: Math.round(totalCents / count), observationCount: count
     })).sort((a, b) => a.observedDay.localeCompare(b.observedDay));
   },
