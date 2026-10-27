@@ -130,11 +130,12 @@ export const supabaseData: MangaRepository = {
     const db = await clientOrThrow();
     const { data, error } = await db.rpc("get_public_quotation_values");
     fail(error);
-    return (data ?? []).map((row: { edition_id: string; price: number; observed_at: string }) => ({
+    const values: { editionId: string; priceCents: number; observedAt: string }[] = (data ?? []).map((row: { edition_id: string; price: number; observed_at: string }) => ({
       editionId: row.edition_id,
       priceCents: Math.round(Number(row.price) * 100),
       observedAt: row.observed_at
-    })).sort((a, b) => b.observedAt.localeCompare(a.observedAt));
+    }));
+    return values.sort((a, b) => b.observedAt.localeCompare(a.observedAt));
   },
   async listOffers() {
     const db = await clientOrThrow();
