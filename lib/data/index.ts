@@ -24,9 +24,16 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
       bucket.count += 1;
       buckets.set(key, bucket);
     }
-    return [...buckets.values()].map(({ editionId, observedDay, totalCents, count }) => ({
+    return [...buckets.values()].filter(({ count }) => count >= 3).map(({ editionId, observedDay, totalCents, count }) => ({
       editionId, observedDay, averagePriceCents: Math.round(totalCents / count), observationCount: count
     })).sort((a, b) => a.observedDay.localeCompare(b.observedDay));
+  },
+  async listPublicQuotationObservationCounts() {
+    const editions = await localData.listEditions();
+    return Promise.all(editions.map(async (edition) => ({
+      editionId: edition.id,
+      observationCount: (await localData.listQuotations(edition.id)).length
+    })));
   },
   async listOffers() { return localData.listOffers(); },
   async getQuotationSummary(editionId) { return summarizeQuotations(localData.listQuotations(editionId)); },

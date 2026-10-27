@@ -117,6 +117,15 @@ export const supabaseData: MangaRepository = {
       observationCount: Number(row.observation_count)
     }));
   },
+  async listPublicQuotationObservationCounts() {
+    const db = await clientOrThrow();
+    const { data, error } = await db.rpc("get_public_quotation_observation_counts");
+    fail(error);
+    return (data ?? []).map((row: { edition_id: string; observation_count: number }) => ({
+      editionId: row.edition_id,
+      observationCount: Number(row.observation_count)
+    }));
+  },
   async listOffers() {
     const db = await clientOrThrow();
     const { data, error } = await db.from("offers").select(offerSelect).order("verified_at", { ascending: false });
