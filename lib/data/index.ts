@@ -26,6 +26,18 @@ export const dataRepository: MangaRepository = {
   },
   async getQuotationSummary(editionId) {
     return summarizeQuotations(localData.listQuotations(editionId));
+  },
+  async createManga(input) {
+    return localData.createManga(input);
+  },
+  async createEdition(input) {
+    return localData.createEdition(input);
+  },
+  async createQuotation(input) {
+    return localData.createQuotation(input);
+  },
+  async createOffer(input) {
+    return localData.createOffer(input);
   }
 };
 

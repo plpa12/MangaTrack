@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { localData } from "@/lib/data/local";
+import { dataRepository } from "@/lib/data";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema } from "@/lib/validation";
 
 export type MangaActionState = { message: string; success: boolean };
@@ -24,7 +24,7 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
     publicationStatus: formData.get("publicationStatus") || "unknown"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos informados." };
-  try { localData.createManga(parsed.data); refreshDataPages(); return { success: true, message: "Obra criada apenas na memória deste processo. Ela não foi salva permanentemente." }; }
+  try { await dataRepository.createManga(parsed.data); refreshDataPages(); return { success: true, message: "Obra criada apenas na memória deste processo. Ela não foi salva permanentemente." }; }
   catch (error) { return failure(error); }
 }
 
@@ -37,7 +37,7 @@ export async function createEditionAction(_previous: MangaActionState, formData:
     notes: formData.get("notes") || null
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos da edição." };
-  try { localData.createEdition(parsed.data); refreshDataPages(); return { success: true, message: "Edição criada temporariamente neste processo." }; }
+  try { await dataRepository.createEdition(parsed.data); refreshDataPages(); return { success: true, message: "Edição criada temporariamente neste processo." }; }
   catch (error) { return failure(error); }
 }
 
@@ -58,12 +58,12 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
     collectionComplete: formData.get("collectionComplete") === "on"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Informe uma cotação válida." };
-  try { localData.createQuotation(parsed.data); refreshDataPages(); return { success: true, message: "Cotação registrada temporariamente. Ela se refere a uma coleção completa." }; }
+  try { await dataRepository.createQuotation(parsed.data); refreshDataPages(); return { success: true, message: "Cotação registrada temporariamente. Ela se refere a uma coleção completa." }; }
   catch (error) { return failure(error); }
 }
 
 export async function createOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
-  if (localOnly()) return { success: false, message: "A gravação pelo Supabase ainda não foi ativada." };
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
   const toDate = (value: FormDataEntryValue | null) => value ? new Date(String(value)).toISOString() : null;
   let verifiedAt: string;
   let expiresAt: string | null;
@@ -84,6 +84,6 @@ export async function createOfferAction(_previous: MangaActionState, formData: F
     status: formData.get("status") || "draft"
   });
   if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os dados da oferta." };
-  try { localData.createOffer(parsed.data); refreshDataPages(); return { success: true, message: "Oferta criada temporariamente. Só ofertas publicadas e válidas aparecem ao público." }; }
+  try { await dataRepository.createOffer(parsed.data); refreshDataPages(); return { success: true, message: "Oferta criada temporariamente. Só ofertas publicadas e válidas aparecem ao público." }; }
   catch (error) { return failure(error); }
 }
