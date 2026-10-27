@@ -1,6 +1,6 @@
 import { localData } from "./local";
+import { buildPublicQuotationTrends, countPublicQuotationValues, summarizePublicQuotationValues } from "../quotation-statistics";
 import { supabaseData } from "./supabase";
-import { summarizeQuotations } from "../money";
 import type { MangaRepository } from "../types";
 
 const hasSupabaseConfig = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -14,33 +14,19 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
   async getManga(id) { return localData.getManga(id); },
   async listEditions(mangaId) { return localData.listEditions(mangaId); },
   async listQuotations(editionId, includeArchived) { return localData.listQuotations(editionId, includeArchived); },
-  async listPublicQuotationTrends() {
-    const buckets = new Map<string, { editionId: string; observedDay: string; totalCents: number; count: number }>();
-    for (const quotation of localData.listQuotations()) {
-      const observedDay = quotation.observedAt.slice(0, 10);
-      const key = `${quotation.editionId}:${observedDay}`;
-      const bucket = buckets.get(key) ?? { editionId: quotation.editionId, observedDay, totalCents: 0, count: 0 };
-      bucket.totalCents += quotation.priceCents;
-      bucket.count += 1;
-      buckets.set(key, bucket);
-    }
-    return [...buckets.values()].filter(({ count }) => count >= 3).map(({ editionId, observedDay, totalCents, count }) => ({
-      editionId, observedDay, averagePriceCents: Math.round(totalCents / count), observationCount: count
-    })).sort((a, b) => a.observedDay.localeCompare(b.observedDay));
-  },
+  async listPublicQuotationTrends() { return buildPublicQuotationTrends(await this.listPublicQuotationValues()); },
   async listPublicQuotationObservationCounts() {
-    const editions = await localData.listEditions();
-    return Promise.all(editions.map(async (edition) => ({
-      editionId: edition.id,
-      observationCount: (await localData.listQuotations(edition.id)).length
-    })));
+    const counts = countPublicQuotationValues(await this.listPublicQuotationValues());
+    return (await localData.listEditions()).map(({id}) => counts.find(c => c.editionId === id) ?? {editionId:id, observationCount:0});
   },
   async listPublicQuotationValues() {
-    return localData.listQuotations().map(({ editionId, priceCents, observedAt }) => ({ editionId, priceCents, observedAt }))
-      .sort((a, b) => b.observedAt.localeCompare(a.observedAt));
+    const mangaIds = new Set(localData.listManga().map(m => m.id));
+    const editionIds = new Set(localData.listEditions().filter(e => mangaIds.has(e.mangaId)).map(e => e.id));
+    return localData.listQuotations().filter(q => editionIds.has(q.editionId) && Number.isSafeInteger(q.priceCents) && q.priceCents > 0)
+      .map(({editionId,priceCents,observedAt}) => ({editionId,priceCents,observedAt})).sort((a,b) => b.observedAt.localeCompare(a.observedAt));
   },
   async listOffers() { return localData.listOffers(); },
-  async getQuotationSummary(editionId) { return summarizeQuotations(localData.listQuotations(editionId)); },
+  async getQuotationSummary(editionId) { return summarizePublicQuotationValues(await this.listPublicQuotationValues(), editionId); },
   async createManga(input) { return localData.createManga(input); },
   async updateManga(id, input) { return localData.updateManga(id, input); },
   async archiveManga(id) { localData.archiveManga(id); },
