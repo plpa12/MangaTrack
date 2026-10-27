@@ -56,6 +56,21 @@ export const localData = {
     store.editions.push(edition);
     return edition;
   },
+  updateEdition(id: string, input: { mangaId: string; name: string; publisher?: string | null; format?: string | null; isbn?: string | null; physicalVolumeCount?: number | null; notes?: string | null }): Edition {
+    const edition = store.editions.find((item) => item.id === id && !item.archived);
+    if (!edition) throw new Error("A edição não foi encontrada ou já está arquivada.");
+    if (!this.getManga(input.mangaId)) throw new Error("A obra selecionada não existe.");
+    if (store.editions.some((item) => item.id !== id && item.mangaId === input.mangaId && !item.archived && item.name.toLocaleLowerCase("pt-BR") === input.name.trim().toLocaleLowerCase("pt-BR"))) {
+      throw new Error("Já existe uma edição com esse nome para esta obra.");
+    }
+    Object.assign(edition, { mangaId: input.mangaId, name: input.name.trim(), publisher: input.publisher || null, format: input.format || null, isbn: input.isbn || null, physicalVolumeCount: input.physicalVolumeCount ?? null, notes: input.notes || null });
+    return edition;
+  },
+  archiveEdition(id: string): void {
+    const edition = store.editions.find((item) => item.id === id && !item.archived);
+    if (!edition) throw new Error("A edição não foi encontrada ou já está arquivada.");
+    edition.archived = true;
+  },
   createQuotation(input: { editionId: string; price: number; observedAt: string; listingUrl?: string | null; conditionNotes?: string | null; collectionComplete: true }): Quotation {
     if (!store.editions.some((e) => e.id === input.editionId && !e.archived)) throw new Error("A edição selecionada não existe.");
     const quotation: Quotation = { id: randomUUID(), editionId: input.editionId, priceCents: Math.round(input.price * 100), observedAt: input.observedAt, listingUrl: input.listingUrl || null, conditionNotes: input.conditionNotes || null, collectionComplete: true, createdAt: new Date().toISOString() };

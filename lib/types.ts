@@ -46,6 +46,10 @@ export interface CreateEditionInput {
   mangaId: string; name: string; publisher?: string | null; format?: string | null;
   isbn?: string | null; physicalVolumeCount?: number | null; notes?: string | null;
 }
+export interface UpdateEditionInput {
+  mangaId: string; name: string; publisher?: string | null; format?: string | null;
+  isbn?: string | null; physicalVolumeCount?: number | null; notes?: string | null;
+}
 export interface CreateQuotationInput {
   editionId: string; price: number; observedAt: string; listingUrl?: string | null;
   conditionNotes?: string | null; collectionComplete: true;
@@ -70,6 +74,8 @@ export interface MangaRepository {
   updateManga(id: string, input: UpdateMangaInput): Promise<Manga>;
   archiveManga(id: string): Promise<void>;
   createEdition(input: CreateEditionInput): Promise<Edition>;
+  updateEdition(id: string, input: UpdateEditionInput): Promise<Edition>;
+  archiveEdition(id: string): Promise<void>;
   createQuotation(input: CreateQuotationInput): Promise<Quotation>;
   createOffer(input: CreateOfferInput): Promise<Offer>;
 }

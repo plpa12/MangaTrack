@@ -4,6 +4,7 @@ import { getDataModeLabel, dataRepository } from "@/lib/data";
 import MangaForm from "./manga-form";
 import { EditionForm, OfferForm, QuotationForm } from "./data-forms";
 import MangaManagement from "./manga-management";
+import EditionManagement from "./edition-management";
 
 export default async function AdminPage() {
   const local = getDataModeLabel().startsWith("Modo local");
@@ -24,6 +25,7 @@ export default async function AdminPage() {
     <section><div className="section-head"><div><h2>Cadastrar obra</h2><p>Título e autor são obrigatórios; capa e dados editoriais podem ser adicionados depois.</p></div></div><div className="panel"><MangaForm /></div></section>
     <section><div className="section-head"><div><h2>Editar ou arquivar obras</h2><p>Atualize os dados editoriais ou arquive uma obra sem apagar o histórico.</p></div></div><MangaManagement mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Cadastrar edição</h2><p>Uma obra pode ter edições brasileiras, formatos e editoras diferentes.</p></div></div><div className="panel"><EditionForm mangas={mangas}/></div></section>
+    <section><div className="section-head"><div><h2>Editar ou arquivar edições</h2><p>Atualize os dados editoriais e preserve o histórico ao arquivar.</p></div></div><EditionManagement editions={editions} mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Registrar cotação</h2><p>Somente preços de coleções usadas completas entram no histórico.</p></div></div><div className="panel"><QuotationForm editions={editions}/></div></section>
     <section><div className="section-head"><div><h2>Cadastrar oferta de mangá novo</h2><p>Descontos só aparecem com preço anterior confirmado e evidência.</p></div></div><div className="panel"><OfferForm mangas={mangas} editions={editions}/></div></section>
     <div className="section-head"><div><h2>Resumo temporário</h2><p>Os registros abaixo existem apenas enquanto este processo estiver ativo.</p></div></div>

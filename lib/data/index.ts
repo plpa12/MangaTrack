@@ -39,6 +39,12 @@ export const dataRepository: MangaRepository = {
   async createEdition(input) {
     return localData.createEdition(input);
   },
+  async updateEdition(id, input) {
+    return localData.updateEdition(id, input);
+  },
+  async archiveEdition(id) {
+    localData.archiveEdition(id);
+  },
   async createQuotation(input) {
     return localData.createQuotation(input);
   },

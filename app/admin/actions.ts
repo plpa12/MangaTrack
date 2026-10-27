@@ -126,3 +126,37 @@ export async function archiveMangaAction(_previous: MangaActionState, formData: 
     return { success: true, message: "Obra arquivada temporariamente. Ela deixa de aparecer no catálogo." };
   } catch (error) { return failure(error); }
 }
+
+
+function editionFormData(formData: FormData) {
+  return {
+    mangaId: formData.get("mangaId"), name: formData.get("name"), publisher: formData.get("publisher") || null,
+    format: formData.get("format") || null, isbn: formData.get("isbn") || null,
+    physicalVolumeCount: formData.get("physicalVolumeCount") ? Number(formData.get("physicalVolumeCount")) : null,
+    notes: formData.get("notes") || null
+  };
+}
+
+export async function updateEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da edição inválido." };
+  const parsed = editionInputSchema.safeParse(editionFormData(formData));
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message ?? "Confira os campos da edição." };
+  try {
+    await dataRepository.updateEdition(id, parsed.data);
+    refreshDataPages();
+    return { success: true, message: "Edição atualizada temporariamente; as alterações não são permanentes." };
+  } catch (error) { return failure(error); }
+}
+
+export async function archiveEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da edição inválido." };
+  try {
+    await dataRepository.archiveEdition(id);
+    refreshDataPages();
+    return { success: true, message: "Edição arquivada sem apagar o histórico de cotações." };
+  } catch (error) { return failure(error); }
+}
