@@ -11,6 +11,7 @@ export const dataMode = useSupabase ? "supabase" as const : "local-empty" as con
 export { localData };
 export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
   async listManga(query) { return localData.listManga(query); },
+  async listPopularManga(limit = 10) { return [...localData.listManga()].filter(m => m.searchCount > 0).sort((a,b) => b.searchCount-a.searchCount).slice(0, Math.max(1, Math.min(limit, 20))); },
   async getManga(id) { return localData.getManga(id); },
   async listEditions(mangaId) { return localData.listEditions(mangaId); },
   async listQuotations(editionId, includeArchived) { return localData.listQuotations(editionId, includeArchived); },
