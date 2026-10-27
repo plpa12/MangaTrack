@@ -1,8 +1,9 @@
 export type QuotationAvailability = "none" | "insufficient" | "available";
 
 /**
- * Distinguishes no eligible records from records that cannot yet be safely
- * represented by a public price aggregate.
+ * Distinguishes no eligible records from records with a public aggregate.
+ * One eligible quotation is sufficient for a mean and a one-point chart;
+ * small samples are labeled separately instead of being hidden.
  */
 export function getQuotationAvailability(
   observationCount: number,

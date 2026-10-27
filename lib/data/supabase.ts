@@ -1,11 +1,11 @@
 import "server-only";
-import { summarizeQuotations } from "../money";
 import type {
   CreateEditionInput, CreateMangaInput, CreateOfferInput, CreateQuotationInput,
   Edition, Manga, MangaRepository, Offer, OfferStatus, PublicQuotationTrend, Quotation, UpdateEditionInput,
   UpdateMangaInput, UpdateOfferInput
 } from "../types";
 import { createSupabaseServerClient } from "../supabase/server";
+import { buildPublicQuotationTrends, countPublicQuotationValues, summarizePublicQuotationValues } from "../quotation-statistics";
 import type { Database } from "../supabase/database.types";
 type MangaRow = Database["public"]["Tables"]["manga"]["Row"];
 type EditionRow = Database["public"]["Tables"]["editions"]["Row"];
@@ -107,24 +107,10 @@ export const supabaseData: MangaRepository = {
     fail(error);
     return (data ?? []).map(mapQuotation);
   },
-  async listPublicQuotationTrends(): Promise<PublicQuotationTrend[]> {
-    const db = await clientOrThrow();
-    const { data, error } = await db.rpc("get_public_quotation_trends");
-    fail(error);
-    return (data ?? []).map((row: { edition_id: string; observed_day: string; average_price: number; observation_count: number }) => ({
-      editionId: row.edition_id, observedDay: row.observed_day,
-      averagePriceCents: Math.round(Number(row.average_price) * 100),
-      observationCount: Number(row.observation_count)
-    }));
-  },
+  async listPublicQuotationTrends(): Promise<PublicQuotationTrend[]> { return buildPublicQuotationTrends(await this.listPublicQuotationValues()); },
   async listPublicQuotationObservationCounts() {
-    const db = await clientOrThrow();
-    const { data, error } = await db.rpc("get_public_quotation_observation_counts");
-    fail(error);
-    return (data ?? []).map((row: { edition_id: string; observation_count: number }) => ({
-      editionId: row.edition_id,
-      observationCount: Number(row.observation_count)
-    }));
+    const [counts, editions] = await Promise.all([this.listPublicQuotationValues().then(countPublicQuotationValues), this.listEditions()]);
+    return editions.map(({ id }) => counts.find((count) => count.editionId === id) ?? { editionId: id, observationCount: 0 });
   },
   async listPublicQuotationValues() {
     const db = await clientOrThrow();
@@ -143,32 +129,7 @@ export const supabaseData: MangaRepository = {
     fail(error);
     return (data ?? []).map(mapOffer);
   },
-  async getQuotationSummary(editionId) {
-    const db = await clientOrThrow();
-    const [{ data: trendData, error: trendError }, { data: countData, error: countError }] = await Promise.all([
-      db.rpc("get_public_quotation_trends"),
-      db.rpc("get_public_quotation_observation_counts")
-    ]);
-    fail(trendError);
-    fail(countError);
-    const countRow = (countData ?? []).find((row: { edition_id: string }) => row.edition_id === editionId);
-    const observationCount = countRow ? Number((countRow as { observation_count: number }).observation_count) : 0;
-    const daily = (trendData ?? []).filter((row: { edition_id: string }) => row.edition_id === editionId);
-    if (!daily.length) {
-      return { averageCents: null, goodPriceCents: null, greatPriceCents: null,
-        observationCount, latestObservedAt: null, limitedSample: observationCount < 5 };
-    }
-    const visibleObservations = daily.reduce((sum: number, row: { observation_count: number }) => sum + Number(row.observation_count), 0);
-    const weighted = daily.reduce((sum: number, row: { average_price: number; observation_count: number }) =>
-      sum + Math.round(Number(row.average_price) * 100) * Number(row.observation_count), 0);
-    const averageCents = Math.round(weighted / visibleObservations);
-    const latest = daily.reduce((value: string | null, row: { observed_day: string }) =>
-      !value || row.observed_day > value ? row.observed_day : value, null);
-    return { averageCents, goodPriceCents: Math.round(averageCents * 0.9),
-      greatPriceCents: Math.round(averageCents * 0.8), observationCount,
-      latestObservedAt: latest ? new Date(`${latest}T12:00:00.000Z`).toISOString() : null,
-      limitedSample: observationCount < 5 };
-  },
+  async getQuotationSummary(editionId) { return summarizePublicQuotationValues(await this.listPublicQuotationValues(), editionId); },
   async createManga(input) {
     const db = await clientOrThrow();
     const { data, error } = await db.from("manga").insert(mangaWrite(input)).select("*").single();
