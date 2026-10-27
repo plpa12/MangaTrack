@@ -6,6 +6,11 @@ import type {
   UpdateMangaInput, UpdateOfferInput
 } from "../types";
 import { createSupabaseServerClient } from "../supabase/server";
+import type { Database } from "../supabase/database.types";
+type MangaRow = Database["public"]["Tables"]["manga"]["Row"];
+type EditionRow = Database["public"]["Tables"]["editions"]["Row"];
+type QuotationRow = Database["public"]["Tables"]["quotations"]["Row"];
+type OfferRow = Database["public"]["Tables"]["offers"]["Row"];
 
 async function clientOrThrow() {
   const client = await createSupabaseServerClient();
@@ -15,7 +20,7 @@ async function clientOrThrow() {
 function fail(error: { message: string } | null) {
   if (error) throw new Error(error.message);
 }
-function mapManga(row: any): Manga {
+function mapManga(row: MangaRow): Manga {
   return {
     id: row.id, title: row.title, author: row.author,
     coverUrl: row.cover_path?.startsWith("http") ? row.cover_path : null,
@@ -25,17 +30,17 @@ function mapManga(row: any): Manga {
     searchCount: 0, createdAt: row.created_at, updatedAt: row.updated_at
   };
 }
-function mapEdition(row: any): Edition {
+function mapEdition(row: EditionRow): Edition {
   return { id: row.id, mangaId: row.manga_id, name: row.name, publisher: row.publisher,
     format: row.format, isbn: row.isbn, physicalVolumeCount: row.physical_volume_count,
     notes: row.notes, archived: row.archived, createdAt: row.created_at };
 }
-function mapQuotation(row: any): Quotation {
+function mapQuotation(row: QuotationRow): Quotation {
   return { id: row.id, editionId: row.edition_id, priceCents: Math.round(Number(row.price) * 100),
     observedAt: row.observed_at, listingUrl: row.listing_url, conditionNotes: row.condition_notes,
     collectionComplete: row.collection_complete, createdAt: row.created_at, archived: row.archived };
 }
-function mapOffer(row: any): Offer {
+function mapOffer(row: OfferRow): Offer {
   return { id: row.id, title: row.title, mangaId: row.manga_id, editionId: row.edition_id,
     productType: row.product_type, store: row.store,
     promotionalPriceCents: Math.round(Number(row.promotional_price) * 100),
