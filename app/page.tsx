@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, Search, Tag, TrendingUp } from "lucide-react";
 import { localData } from "@/lib/data/local";
-import { formatBRL, sortPublicOffers } from "@/lib/money";
+import { formatBRL, sortPublicOffers, summarizeQuotations } from "@/lib/money";
 
 export default function HomePage() {
   const mangas = localData.listManga();
@@ -9,9 +9,8 @@ export default function HomePage() {
   const editions = localData.listEditions();
   const quotations = localData.listQuotations();
   const recentMangas = [...mangas].sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
-  const editionById = new Map(editions.map((edition) => [edition.id, edition]));
   const mangaById = new Map(mangas.map((manga) => [manga.id, manga]));
-  const recentQuotes = [...quotations].sort((a,b) => b.observedAt.localeCompare(a.observedAt)).slice(0, 4);
+  const quotationSummaries = editions.map((edition) => ({ edition, manga: mangaById.get(edition.mangaId), summary: summarizeQuotations(quotations.filter((quote) => quote.editionId === edition.id)) })).filter((row) => row.summary.observationCount > 0).sort((a,b) => (b.summary.latestObservedAt ?? "").localeCompare(a.summary.latestObservedAt ?? "")).slice(0, 4);
   return <div>
     <section className="hero"><div className="hero-content">
       <span className="eyebrow">SEU RADAR DE MANGÁS</span>
@@ -25,7 +24,7 @@ export default function HomePage() {
       <div className="stat-card"><span className="stat-icon"><Tag size={20}/></span><div><small>Ofertas ativas</small><strong>{sortPublicOffers(localData.listOffers()).length}</strong></div></div>
     </section>
     <section><div className="section-head"><div><h2>Cotações atualizadas</h2><p>Histórico de coleções usadas completas por edição.</p></div><Link href="/quotations" className="section-link">Ver cotações <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div>
-      {recentQuotes.length ? <div className="admin-list">{recentQuotes.map((quote) => { const edition = editionById.get(quote.editionId); const manga = edition ? mangaById.get(edition.mangaId) : null; return <div className="admin-item" key={quote.id}><div><strong>{manga?.title ?? "Obra"} — {edition?.name ?? "Edição"}</strong><small>Observada em {new Intl.DateTimeFormat("pt-BR",{dateStyle:"medium"}).format(new Date(quote.observedAt))}</small></div><strong>{formatBRL(quote.priceCents)}</strong></div>; })}</div> : <div className="empty-state"><span className="empty-icon"><TrendingUp size={20}/></span><h3>As primeiras cotações aparecerão aqui</h3><p>Quando houver observações válidas, você verá médias e tendências de preço por edição.</p></div>}
+      {quotationSummaries.length ? <div className="admin-list">{quotationSummaries.map(({edition,manga,summary}) => <div className="admin-item" key={edition.id}><div><strong>{manga?.title ?? "Obra"} — {edition.name}</strong><small>{summary.observationCount} observações · atualizado em {summary.latestObservedAt ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"medium"}).format(new Date(summary.latestObservedAt)) : "—"}</small></div><strong>{formatBRL(summary.averageCents)}</strong></div>)}</div> : <div className="empty-state"><span className="empty-icon"><TrendingUp size={20}/></span><h3>As primeiras cotações aparecerão aqui</h3><p>Quando houver observações válidas, você verá médias e tendências de preço por edição.</p></div>}
     </section>
     <section><div className="section-head"><div><h2>Mais pesquisados</h2><p>Obras cadastradas no catálogo.</p></div><Link href="/mangas" className="section-link">Ver mangás <ArrowRight size={13} style={{display:"inline",verticalAlign:"middle"}}/></Link></div>
       {recentMangas.length ? <div className="manga-grid">{recentMangas.map((manga) => <Link className="manga-card" href={`/mangas/${manga.id}`} key={manga.id}>{manga.coverUrl ? <img className="manga-cover" src={manga.coverUrl} alt={`Capa de ${manga.title}`} loading="lazy"/> : <div className="cover-placeholder"><BookOpen size={25}/></div>}<strong>{manga.title}</strong><span>{manga.author}</span></Link>)}</div> : <div className="empty-state"><span className="empty-icon"><Search size={20}/></span><h3>Nenhuma obra no catálogo ainda</h3><p>O catálogo começa vazio para evitar informações fictícias. As obras cadastradas serão exibidas aqui.</p><Link href="/mangas" className="button">Abrir catálogo</Link></div>}
