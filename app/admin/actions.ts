@@ -1,11 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { dataRepository } from "@/lib/data";
+import { dataRepository, dataMode } from "@/lib/data";
+import { isSupabaseAdmin } from "@/lib/supabase/admin";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema, updateOfferInputSchema } from "@/lib/validation";
 import type { OfferStatus } from "@/lib/types";
 
 export type MangaActionState = { message: string; success: boolean };
-const localOnly = () => process.env.NODE_ENV === "production" || (process.env.MANGATRACK_DATA_MODE === "supabase" && Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) && Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY));
+const localOnly = () => dataMode !== "supabase" && (process.env.NODE_ENV === "production" || process.env.MANGATRACK_DATA_MODE === "supabase");
+const adminDenied = (): MangaActionState => ({ success: false, message: "Entre com uma conta autorizada para administrar o MangaTrack." });
 const localOnlyMessage = () => process.env.NODE_ENV === "production"
   ? "Cadastros desativados em produção enquanto a autenticação e a persistência seguras não estiverem implementadas."
   : "A gravação pelo Supabase ainda não foi ativada. Nenhum dado foi salvo.";
@@ -16,6 +18,7 @@ const failure = (error: unknown): MangaActionState => ({ success: false, message
 
 export async function createMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const parsed = mangaInputSchema.safeParse({
     title: formData.get("title"), author: formData.get("author"), coverUrl: formData.get("coverUrl") || "",
     alternativeTitles: String(formData.get("alternativeTitles") || "").split("\n").map((value) => value.trim()).filter(Boolean),
@@ -31,6 +34,7 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
 
 export async function createEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const parsed = editionInputSchema.safeParse({
     mangaId: formData.get("mangaId"), name: formData.get("name"), publisher: formData.get("publisher") || null,
     format: formData.get("format") || null, isbn: formData.get("isbn") || null,
@@ -43,7 +47,8 @@ export async function createEditionAction(_previous: MangaActionState, formData:
 }
 
 export async function createQuotationAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
-  if (localOnly()) return { success: false, message: "A gravação pelo Supabase ainda não foi ativada." };
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   let observedAt: string;
   try {
     const rawDate = String(formData.get("observedAt") || "");
@@ -65,6 +70,7 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
 
 export async function createOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const toDate = (value: FormDataEntryValue | null) => value ? new Date(String(value)).toISOString() : null;
   let verifiedAt: string;
   let expiresAt: string | null;
@@ -106,6 +112,7 @@ const validId = (value: FormDataEntryValue | null): value is string =>
 
 export async function updateMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
   const parsed = mangaInputSchema.safeParse(mangaFormData(formData));
@@ -119,6 +126,7 @@ export async function updateMangaAction(_previous: MangaActionState, formData: F
 
 export async function archiveMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
   try {
@@ -140,6 +148,7 @@ function editionFormData(formData: FormData) {
 
 export async function updateEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   if (!validId(id)) return { success: false, message: "Identificador da edição inválido." };
   const parsed = editionInputSchema.safeParse(editionFormData(formData));
@@ -153,6 +162,7 @@ export async function updateEditionAction(_previous: MangaActionState, formData:
 
 export async function archiveEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   if (!validId(id)) return { success: false, message: "Identificador da edição inválido." };
   try {
@@ -165,6 +175,7 @@ export async function archiveEditionAction(_previous: MangaActionState, formData
 
 export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   const status = formData.get("status");
   if (!validId(id)) return { success: false, message: "Identificador da oferta inválido." };
@@ -181,6 +192,7 @@ export async function updateOfferStatusAction(_previous: MangaActionState, formD
 
 export async function setQuotationArchivedAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   const archivedValue = formData.get("archived");
   if (!validId(id)) return { success: false, message: "Identificador da cotação inválido." };
@@ -196,6 +208,7 @@ export async function setQuotationArchivedAction(_previous: MangaActionState, fo
 
 export async function updateOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
   if (!validId(id)) return { success: false, message: "Identificador da oferta inválido." };
   let expiresAt: string | null = null;
