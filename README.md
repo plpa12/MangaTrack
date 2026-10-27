@@ -53,6 +53,19 @@ A prévia é um ambiente temporário de desenvolvimento, não um endereço de pr
 
 O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração `0002_quotation_archiving.sql` adiciona arquivamento reversível às cotações, e `0003_public_quotation_trends.sql` cria uma RPC pública que retorna apenas médias diárias agregadas, exigindo pelo menos três observações por edição/dia. As migrações não contêm dados iniciais. As cotações individuais têm leitura restrita à administração. A migração `0003_public_quotation_trends.sql` disponibiliza somente médias diárias com pelo menos três registros por edição/dia. O adaptador e o fluxo de login já estão no código, mas precisam ser validados em um projeto Supabase real antes de produção. A política de estatísticas ainda requer uma função RPC segura para incrementos públicos.
 
+## Verificação real da integração Supabase
+
+O teste automatizado abaixo faz login com uma conta administrativa, verifica leitura nas tabelas principais e a RPC pública de tendências, insere uma única obra temporária com título identificável, lê o mesmo registro de volta e tenta excluir somente o UUID recém-criado. Ele não usa a chave `service_role` e não apaga registros existentes.
+
+Para executá-lo em uma cópia local do projeto, configure as variáveis abaixo apenas no terminal/ambiente local, usando uma conta que já tenha `app_metadata.mangatrack_admin=true`:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SMOKE_TEST_EMAIL`
+- `SUPABASE_SMOKE_TEST_PASSWORD`
+
+Depois rode `npm run test:supabase`. Não coloque a senha em arquivos versionados, não a envie pelo chat e não configure a senha de teste na Vercel. Se a limpeza falhar, o script sinaliza isso; remova apenas o registro de teste identificado no resultado, nunca registros existentes. O teste não foi executado automaticamente no deploy, pois exige credenciais de um administrador.
+
 ## Segurança
 
 - Nunca versione `.env.local` ou segredos.
