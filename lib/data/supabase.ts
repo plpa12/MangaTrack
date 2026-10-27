@@ -26,7 +26,7 @@ function mapManga(row: MangaRow): Manga {
     coverUrl: row.cover_path?.startsWith("http") ? row.cover_path : null,
     alternativeTitles: row.alternative_titles ?? [], synopsis: row.synopsis,
     chapterCount: row.chapter_count, originalVolumeCount: row.original_volume_count,
-    publicationStatus: row.publication_status, archived: row.archived,
+    publicationStatus: row.publication_status as Manga["publicationStatus"], archived: row.archived,
     searchCount: 0, createdAt: row.created_at, updatedAt: row.updated_at
   };
 }
@@ -42,12 +42,12 @@ function mapQuotation(row: QuotationRow): Quotation {
 }
 function mapOffer(row: OfferRow): Offer {
   return { id: row.id, title: row.title, mangaId: row.manga_id, editionId: row.edition_id,
-    productType: row.product_type, store: row.store,
+    productType: row.product_type as Offer["productType"], store: row.store,
     promotionalPriceCents: Math.round(Number(row.promotional_price) * 100),
     previousPriceCents: row.previous_price == null ? null : Math.round(Number(row.previous_price) * 100),
     previousPriceConfirmed: row.previous_price_confirmed, previousPriceEvidence: row.previous_price_evidence,
     productUrl: row.product_url, affiliateUrl: row.affiliate_url, imageUrl: row.image_url,
-    verifiedAt: row.verified_at, expiresAt: row.expires_at, status: row.status,
+    verifiedAt: row.verified_at, expiresAt: row.expires_at, status: row.status as OfferStatus,
     createdAt: row.created_at, updatedAt: row.updated_at };
 }
 const mangaWrite = (input: CreateMangaInput | UpdateMangaInput) => ({
