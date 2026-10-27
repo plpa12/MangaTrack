@@ -12,7 +12,7 @@ export async function createMangaAction(_previous: MangaActionState, formData: F
   const parsed = mangaInputSchema.safeParse({
     title: formData.get("title"),
     author: formData.get("author"),
-    coverUrl: formData.get("coverUrl") || null,
+    coverUrl: formData.get("coverUrl") || "",
     alternativeTitles: String(formData.get("alternativeTitles") || "").split("\n").map((value) => value.trim()).filter(Boolean),
     synopsis: formData.get("synopsis") || null
   });
