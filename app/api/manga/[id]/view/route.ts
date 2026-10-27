@@ -17,7 +17,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
 
   const supabase = createSupabaseServiceClient();
   if (!supabase) return NextResponse.json({ error: "Popularity tracking is not configured." }, { status: 503 });
-  const { error } = await supabase.rpc("increment_manga_search_count", { p_manga_id: id });
+  const { error } = await supabase.rpc("increment_manga_search_count", { p_manga_id: id } as never);
   if (error) {
     console.error("[manga-view] Popularity update failed.", { code: error.code });
     return NextResponse.json({ error: "Popularity tracking unavailable." }, { status: 503 });
