@@ -3,11 +3,12 @@ import { dataRepository } from "@/lib/data";
 import QuotationExplorer from "./quotation-explorer";
 
 export default async function QuotationsPage() {
-  const [mangas, editions, publicTrends, observationCountRows] = await Promise.all([
+  const [mangas, editions, publicTrends, observationCountRows, publicQuotationValues] = await Promise.all([
     dataRepository.listManga(),
     dataRepository.listEditions(),
     dataRepository.listPublicQuotationTrends(),
-    dataRepository.listPublicQuotationObservationCounts()
+    dataRepository.listPublicQuotationObservationCounts(),
+    dataRepository.listPublicQuotationValues()
   ]);
   const observationCounts = Object.fromEntries(observationCountRows.map(({editionId, observationCount}) => [editionId, observationCount]));
   const trends = await Promise.all(editions.map(async (edition) => {
@@ -23,7 +24,7 @@ export default async function QuotationsPage() {
   return <div>
     <div className="page-heading"><div><span className="eyebrow">HISTÓRICO DE PREÇOS</span><h1>Cotações</h1><p>Acompanhe a evolução de preços de coleções usadas completas, sempre separadas por edição.</p></div></div>
     <div className="notice"><strong>Como funciona:</strong> apenas coleções completas entram nos cálculos. A média é calculada por edição; bom preço é até 90% da média e ótimo preço é até 80%. Valores indicativos com base apenas nos registros cadastrados.</div>
-    <QuotationExplorer mangas={mangas.map(({id,title}) => ({id,title}))} editions={editions.map(({id,mangaId,name}) => ({id,mangaId,name}))} trends={trends} observationCounts={observationCounts}/>
-    <div className="notice" style={{marginTop:14}}><AlertCircle size={15} style={{display:"inline",verticalAlign:"middle",marginRight:7}}/>Anúncios individuais, links e observações privadas não são enviados para a interface pública. O gráfico apresenta médias diárias agregadas; no modo Supabase, dias com menos de três registros são omitidos para proteger a privacidade.</div>
+    <QuotationExplorer mangas={mangas.map(({id,title}) => ({id,title}))} editions={editions.map(({id,mangaId,name}) => ({id,mangaId,name}))} trends={trends} observationCounts={observationCounts} quotationValues={publicQuotationValues}/>
+    <div className="notice" style={{marginTop:14}}><AlertCircle size={15} style={{display:"inline",verticalAlign:"middle",marginRight:7}}/>Valores de cotações elegíveis são públicos. Links de anúncios e observações privadas não são exibidos. O gráfico apresenta médias diárias agregadas e só inclui dias com pelo menos três registros.</div>
   </div>;
 }
