@@ -55,6 +55,8 @@ O esquema inicial está em `supabase/migrations/0001_initial.sql`; a migração 
 
 ## Verificação real da integração Supabase
 
+O endpoint público e somente de leitura `/api/health` verifica se o modo Supabase está ativo e se as leituras de obras, edições, ofertas e a RPC de tendências funcionam. Ele retorna apenas estados booleanos, sem dados do catálogo, URLs de projeto ou credenciais. Um resultado `200` com `status: "ok"` confirma a conectividade pública de leitura, mas não substitui o teste autenticado de gravação abaixo.
+
 O teste automatizado abaixo faz login com uma conta administrativa, verifica leitura nas tabelas principais e a RPC pública de tendências, insere uma única obra temporária com título identificável, lê o mesmo registro de volta e tenta excluir somente o UUID recém-criado. Ele não usa a chave `service_role` e não apaga registros existentes.
 
 Para executá-lo em uma cópia local do projeto, configure as variáveis abaixo apenas no terminal/ambiente local, usando uma conta que já tenha `app_metadata.mangatrack_admin=true`:
