@@ -18,7 +18,8 @@ export async function GET() {
       dataRepository.listEditions(),
       dataRepository.listOffers(),
       dataRepository.listPublicQuotationTrends(),
-      dataRepository.listPublicQuotationObservationCounts()
+      dataRepository.listPublicQuotationObservationCounts(),
+      dataRepository.listPopularManga(1)
     ]);
 
     const supabase = await createSupabaseServerClient();
@@ -35,8 +36,16 @@ export async function GET() {
       offerRead: results[2].status === "fulfilled",
       quotationTrendsRpc: results[3].status === "fulfilled",
       quotationCountsRpc: results[4].status === "fulfilled",
+      popularMangaRpc: results[5].status === "fulfilled",
+      coverStorageAvailable: false,
       offerEvidenceProtected
     };
+    let coverStorageAvailable = false;
+    if (supabase) {
+      const { error: storageError } = await supabase.storage.from("mangatrack-covers").list("", { limit: 1 });
+      coverStorageAvailable = !storageError;
+    }
+    checks.coverStorageAvailable = coverStorageAvailable;
     const healthy = Object.values(checks).every(Boolean);
 
     if (!healthy) {
@@ -45,7 +54,7 @@ export async function GET() {
         checks,
         failures: results.flatMap((result, index) =>
           result.status === "rejected"
-            ? [{ check: ["mangaRead", "editionRead", "offerRead", "quotationTrendsRpc", "quotationCountsRpc"][index], reason: result.reason }]
+            ? [{ check: ["mangaRead", "editionRead", "offerRead", "quotationTrendsRpc", "quotationCountsRpc", "popularMangaRpc"][index], reason: result.reason }]
             : []
         )
       });
