@@ -23,6 +23,8 @@ jobs:
       - name: Install dependencies
         # Install exact resolved versions from package-lock.json.
         run: npm ci --no-audit --no-fund
+      - name: Dependency vulnerability audit
+        run: npm audit --audit-level=high
       - name: TypeScript
         run: npm run typecheck
       - name: Unit tests
