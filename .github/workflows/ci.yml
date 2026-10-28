@@ -10,39 +10,18 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Commit generated lockfile temporarily
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(deps): add npm lockfile"
-            git push origin HEAD:${{ github.head_ref || github.ref_name }}
-          fi
-      - name: Temporary lockfile capture
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-package-lock
-          path: package-lock.json
-          if-no-files-found: error
+        run: npm ci --no-audit --no-fund
       - name: TypeScript
         run: npm run typecheck
       - name: Unit tests
