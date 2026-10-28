@@ -1,17 +1,11 @@
 "use client";
-
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Save } from "lucide-react";
-import { archiveMangaAction, updateMangaAction, type MangaActionState } from "./actions";
+import { Archive, ArchiveRestore, Save } from "lucide-react";
+import { archiveMangaAction, restoreMangaAction, updateMangaAction, type MangaActionState } from "./actions";
 import type { Manga } from "@/lib/types";
-
 const initialState: MangaActionState = { message: "", success: false };
-
-function Result({ state }: { state: MangaActionState }) {
-  return state.message ? <p className={state.success ? "form-message form-message-success" : "form-message"} role="status">{state.message}</p> : null;
-}
-
+function Result({ state }: { state: MangaActionState }) { return state.message ? <p className={state.success ? "form-message form-message-success" : "form-message"} role="status">{state.message}</p> : null; }
 function MangaItem({ manga }: { manga: Manga }) {
   const [editState, editAction, editPending] = useActionState(updateMangaAction, initialState);
   const [archiveState, archiveAction, archivePending] = useActionState(archiveMangaAction, initialState);
@@ -31,19 +25,26 @@ function MangaItem({ manga }: { manga: Manga }) {
         <div className="field"><label htmlFor={`edit-volumes-${manga.id}`}>Volumes originais</label><input id={`edit-volumes-${manga.id}`} name="originalVolumeCount" type="number" min="0" step="1" defaultValue={manga.originalVolumeCount ?? ""}/></div>
         <div className="field" style={{ gridColumn: "1 / -1" }}><label htmlFor={`edit-synopsis-${manga.id}`}>Sinopse</label><textarea id={`edit-synopsis-${manga.id}`} name="synopsis" rows={3} maxLength={10000} defaultValue={manga.synopsis ?? ""}/></div>
       </div>
-      <button className="button button-primary" type="submit" disabled={editPending}><Save size={15}/>{editPending ? "Salvando..." : "Salvar alterações"}</button>
-      <Result state={editState}/>
+      <button className="button button-primary" type="submit" disabled={editPending}><Save size={15}/>{editPending ? "Salvando..." : "Salvar alterações"}</button><Result state={editState}/>
     </form>
     <form action={archiveAction} className="admin-form" style={{ marginTop: 14 }}>
-      <input type="hidden" name="id" value={manga.id}/>
-      <button className="button" type="submit" disabled={archivePending}><Archive size={15}/>{archivePending ? "Arquivando..." : "Arquivar obra"}</button>
-      <span className="field-hint">Arquivar oculta a obra do catálogo sem apagar o registro.</span>
-      <Result state={archiveState}/>
+      <input type="hidden" name="id" value={manga.id}/><button className="button" type="submit" disabled={archivePending}><Archive size={15}/>{archivePending ? "Arquivando..." : "Arquivar obra"}</button>
+      <span className="field-hint">Arquivar oculta a obra do catálogo sem apagar o registro.</span><Result state={archiveState}/>
     </form>
   </details>;
 }
-
-export default function MangaManagement({ mangas }: { mangas: Manga[] }) {
-  if (!mangas.length) return <div className="empty-small">Nenhuma obra cadastrada para editar ou arquivar.</div>;
-  return <div>{mangas.map((manga) => <MangaItem key={manga.id} manga={manga}/>)}</div>;
+function ArchivedMangaItem({ manga }: { manga: Manga }) {
+  const [state, action, pending] = useActionState(restoreMangaAction, initialState); const router = useRouter();
+  useEffect(() => { if (state.success) router.refresh(); }, [state.success, router]);
+  return <div className="panel" style={{ marginBottom: 12 }}><strong>{manga.title}</strong> <span className="muted">— {manga.author}</span>
+    <form action={action} className="admin-form" style={{ marginTop: 12 }}><input type="hidden" name="id" value={manga.id}/><button className="button button-primary" type="submit" disabled={pending}><ArchiveRestore size={15}/>{pending ? "Restaurando..." : "Desarquivar obra"}</button><Result state={state}/></form>
+  </div>;
+}
+export default function MangaManagement({ mangas, archivedMangas }: { mangas: Manga[]; archivedMangas: Manga[] }) {
+  const [view, setView] = useState<"active" | "archived">("active");
+  return <div><div className="admin-form" style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <button className={view === "active" ? "button button-primary" : "button"} type="button" onClick={() => setView("active")}>Obras ativas ({mangas.length})</button>
+    <button className={view === "archived" ? "button button-primary" : "button"} type="button" onClick={() => setView("archived")}>Obras arquivadas ({archivedMangas.length})</button>
+  </div>
+  {view === "active" ? (mangas.length ? mangas.map((m) => <MangaItem key={m.id} manga={m}/>) : <div className="empty-small">Nenhuma obra ativa para editar ou arquivar.</div>) : (archivedMangas.length ? archivedMangas.map((m) => <ArchivedMangaItem key={m.id} manga={m}/>) : <div className="empty-small">Nenhuma obra arquivada.</div>)}</div>;
 }

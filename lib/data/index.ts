@@ -11,9 +11,11 @@ export const dataMode = useSupabase ? "supabase" as const : "local-empty" as con
 export { localData };
 export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
   async listManga(query) { return localData.listManga(query); },
+  async listArchivedManga() { return localData.listArchivedManga(); },
   async listPopularManga(limit = 10) { return [...localData.listManga()].filter(m => m.searchCount > 0).sort((a,b) => b.searchCount-a.searchCount).slice(0, Math.max(1, Math.min(limit, 20))); },
   async getManga(id) { return localData.getManga(id); },
   async listEditions(mangaId) { return localData.listEditions(mangaId); },
+  async listArchivedEditions() { return localData.listArchivedEditions(); },
   async listQuotations(editionId, includeArchived) { return localData.listQuotations(editionId, includeArchived); },
   async listPublicQuotationTrends() { return buildPublicQuotationTrends(await this.listPublicQuotationValues()); },
   async listPublicQuotationObservationCounts() {
@@ -31,9 +33,11 @@ export const dataRepository: MangaRepository = useSupabase ? supabaseData : {
   async createManga(input) { return localData.createManga(input); },
   async updateManga(id, input) { return localData.updateManga(id, input); },
   async archiveManga(id) { localData.archiveManga(id); },
+  async restoreManga(id) { localData.restoreManga(id); },
   async createEdition(input) { return localData.createEdition(input); },
   async updateEdition(id, input) { return localData.updateEdition(id, input); },
   async archiveEdition(id) { localData.archiveEdition(id); },
+  async restoreEdition(id) { localData.restoreEdition(id); },
   async createQuotation(input) { return localData.createQuotation(input); },
   async setQuotationArchived(id, archived) { return localData.setQuotationArchived(id, archived); },
   async createOffer(input) { return localData.createOffer(input); },

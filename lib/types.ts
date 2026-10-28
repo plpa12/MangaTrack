@@ -78,9 +78,11 @@ export interface CreateOfferInput {
 /** Async data contract keeps pages and server actions independent of the storage provider. */
 export interface MangaRepository {
   listManga(query?: string): Promise<Manga[]>;
+  listArchivedManga(): Promise<Manga[]>;
   listPopularManga(limit?: number): Promise<Manga[]>;
   getManga(id: string): Promise<Manga | null>;
   listEditions(mangaId?: string): Promise<Edition[]>;
+  listArchivedEditions(): Promise<Edition[]>;
   listQuotations(editionId?: string, includeArchived?: boolean): Promise<Quotation[]>;
   listPublicQuotationTrends(): Promise<PublicQuotationTrend[]>;
   listPublicQuotationObservationCounts(): Promise<PublicQuotationCount[]>;
@@ -90,9 +92,11 @@ export interface MangaRepository {
   createManga(input: CreateMangaInput): Promise<Manga>;
   updateManga(id: string, input: UpdateMangaInput): Promise<Manga>;
   archiveManga(id: string): Promise<void>;
+  restoreManga(id: string): Promise<void>;
   createEdition(input: CreateEditionInput): Promise<Edition>;
   updateEdition(id: string, input: UpdateEditionInput): Promise<Edition>;
   archiveEdition(id: string): Promise<void>;
+  restoreEdition(id: string): Promise<void>;
   createQuotation(input: CreateQuotationInput): Promise<Quotation>;
   setQuotationArchived(id: string, archived: boolean): Promise<Quotation>;
   createOffer(input: CreateOfferInput): Promise<Offer>;

@@ -15,9 +15,11 @@ import QuotationManagement from "./quotation-management";
 export default async function AdminPage() {
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) redirect("/login");
   const local = getDataModeLabel().startsWith("Modo local");
-  const [mangas, editions, quotations, offers] = await Promise.all([
+  const [mangas, editions, archivedMangas, archivedEditions, quotations, offers] = await Promise.all([
     dataRepository.listManga(),
     dataRepository.listEditions(),
+    dataRepository.listArchivedManga(),
+    dataRepository.listArchivedEditions(),
     dataRepository.listQuotations(undefined, true),
     dataRepository.listOffers()
   ]);
@@ -30,9 +32,9 @@ export default async function AdminPage() {
       <div className="stat-card"><span className="stat-icon"><ShieldCheck size={20}/></span><div><small>Autenticação</small><strong style={{fontSize:15}}>{dataMode === "supabase" ? "Verificada" : "Pendente"}</strong></div></div>
     </div>
     <section><div className="section-head"><div><h2>Cadastrar obra</h2><p>Título e autor são obrigatórios; capa e dados editoriais podem ser adicionados depois.</p></div></div><div className="panel"><MangaForm /></div></section>
-    <section><div className="section-head"><div><h2>Editar ou arquivar obras</h2><p>Atualize os dados editoriais ou arquive uma obra sem apagar o histórico.</p></div></div><MangaManagement mangas={mangas}/></section>
+    <section><div className="section-head"><div><h2>Editar ou arquivar obras</h2><p>Atualize os dados editoriais ou arquive uma obra sem apagar o histórico.</p></div></div><MangaManagement mangas={mangas} archivedMangas={archivedMangas}/></section>
     <section><div className="section-head"><div><h2>Cadastrar edição</h2><p>Uma obra pode ter edições brasileiras, formatos e editoras diferentes.</p></div></div><div className="panel"><EditionForm mangas={mangas}/></div></section>
-    <section><div className="section-head"><div><h2>Editar ou arquivar edições</h2><p>Atualize os dados editoriais e preserve o histórico ao arquivar.</p></div></div><EditionManagement editions={editions} mangas={mangas}/></section>
+    <section><div className="section-head"><div><h2>Editar ou arquivar edições</h2><p>Atualize os dados editoriais e preserve o histórico ao arquivar.</p></div></div><EditionManagement editions={editions} archivedEditions={archivedEditions} mangas={[...mangas, ...archivedMangas]}/></section>
     <section><div className="section-head"><div><h2>Registrar cotação</h2><p>Somente preços de coleções usadas completas entram no histórico.</p></div></div><div className="panel"><QuotationForm editions={editions}/></div></section>
     <section><div className="section-head"><div><h2>Gerenciar cotações</h2><p>Arquive registros inválidos sem apagá-los; cotações arquivadas não entram nas médias.</p></div></div><QuotationManagement quotations={quotations} editions={editions} mangas={mangas}/></section>
     <section><div className="section-head"><div><h2>Cadastrar oferta de mangá novo</h2><p>Descontos só aparecem com preço anterior confirmado e evidência.</p></div></div><div className="panel"><OfferForm mangas={mangas} editions={editions}/></div></section>

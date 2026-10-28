@@ -96,6 +96,12 @@ export const supabaseData: MangaRepository = {
     fail(error);
     return (data ?? []).map(mapManga);
   },
+  async listArchivedManga() {
+    const db = await clientOrThrow();
+    const { data, error } = await db.from("manga").select("*").eq("archived", true).order("title");
+    fail(error);
+    return (data ?? []).map(mapManga);
+  },
   async getManga(id) {
     const db = await clientOrThrow();
     const { data, error } = await db.from("manga").select("*").eq("id", id).eq("archived", false).maybeSingle();
@@ -107,6 +113,12 @@ export const supabaseData: MangaRepository = {
     let request = db.from("editions").select("*").eq("archived", false).order("name");
     if (mangaId) request = request.eq("manga_id", mangaId);
     const { data, error } = await request;
+    fail(error);
+    return (data ?? []).map(mapEdition);
+  },
+  async listArchivedEditions() {
+    const db = await clientOrThrow();
+    const { data, error } = await db.from("editions").select("*").eq("archived", true).order("name");
     fail(error);
     return (data ?? []).map(mapEdition);
   },
@@ -157,6 +169,12 @@ export const supabaseData: MangaRepository = {
     const { error } = await db.from("manga").update({ archived: true, updated_at: new Date().toISOString() }).eq("id", id);
     fail(error);
   },
+  async restoreManga(id) {
+    const db = await clientOrThrow();
+    const { data, error } = await db.from("manga").update({ archived: false, updated_at: new Date().toISOString() }).eq("id", id).eq("archived", true).select("id").maybeSingle();
+    fail(error);
+    if (!data) throw new Error("A obra não foi encontrada ou já está ativa.");
+  },
   async createEdition(input) {
     const db = await clientOrThrow();
     const { data, error } = await db.from("editions").insert(editionWrite(input)).select("*").single();
@@ -171,6 +189,12 @@ export const supabaseData: MangaRepository = {
     const db = await clientOrThrow();
     const { error } = await db.from("editions").update({ archived: true, updated_at: new Date().toISOString() }).eq("id", id);
     fail(error);
+  },
+  async restoreEdition(id) {
+    const db = await clientOrThrow();
+    const { data, error } = await db.from("editions").update({ archived: false, updated_at: new Date().toISOString() }).eq("id", id).eq("archived", true).select("id").maybeSingle();
+    fail(error);
+    if (!data) throw new Error("A edição não foi encontrada ou já está ativa.");
   },
   async createQuotation(input: CreateQuotationInput) {
     const db = await clientOrThrow();

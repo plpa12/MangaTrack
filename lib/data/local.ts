@@ -12,8 +12,10 @@ export const localData = {
     const q = query.trim().toLocaleLowerCase("pt-BR");
     return store.mangas.filter((m) => !m.archived && (!q || [m.title, ...m.alternativeTitles].some((s) => s.toLocaleLowerCase("pt-BR").includes(q))));
   },
+  listArchivedManga(): Manga[] { return store.mangas.filter((m) => m.archived).sort((a, b) => a.title.localeCompare(b.title, "pt-BR")); },
   getManga(id: string): Manga | null { return store.mangas.find((m) => m.id === id && !m.archived) ?? null; },
   listEditions(mangaId?: string): Edition[] { return store.editions.filter((e) => !e.archived && (!mangaId || e.mangaId === mangaId)); },
+  listArchivedEditions(): Edition[] { return store.editions.filter((e) => e.archived).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")); },
   listQuotations(editionId?: string, includeArchived = false): Quotation[] { return store.quotations.filter((q) => q.collectionComplete && (includeArchived || !q.archived) && (!editionId || q.editionId === editionId)); },
   listOffers(): Offer[] { return [...store.offers]; },
   createManga(input: { title: string; author: string; coverUrl?: string | null; alternativeTitles?: string[]; synopsis?: string | null; chapterCount?: number | null; originalVolumeCount?: number | null; publicationStatus?: Manga["publicationStatus"] }): Manga {
@@ -49,6 +51,13 @@ export const localData = {
     manga.archived = true;
     manga.updatedAt = new Date().toISOString();
   },
+  restoreManga(id: string): void {
+    const manga = store.mangas.find((item) => item.id === id && item.archived);
+    if (!manga) throw new Error("A obra não foi encontrada ou já está ativa.");
+    if (store.mangas.some((item) => item.id !== id && !item.archived && item.title.toLocaleLowerCase("pt-BR") === manga.title.toLocaleLowerCase("pt-BR"))) throw new Error("Já existe uma obra ativa com esse título.");
+    manga.archived = false;
+    manga.updatedAt = new Date().toISOString();
+  },
   createEdition(input: { mangaId: string; name: string; publisher?: string | null; format?: string | null; isbn?: string | null; physicalVolumeCount?: number | null; notes?: string | null }): Edition {
     if (!this.getManga(input.mangaId)) throw new Error("A obra selecionada não existe.");
     if (store.editions.some((e) => e.mangaId === input.mangaId && e.name.toLocaleLowerCase("pt-BR") === input.name.trim().toLocaleLowerCase("pt-BR") && !e.archived)) throw new Error("Já existe uma edição com esse nome para esta obra.");
@@ -70,6 +79,12 @@ export const localData = {
     const edition = store.editions.find((item) => item.id === id && !item.archived);
     if (!edition) throw new Error("A edição não foi encontrada ou já está arquivada.");
     edition.archived = true;
+  },
+  restoreEdition(id: string): void {
+    const edition = store.editions.find((item) => item.id === id && item.archived);
+    if (!edition) throw new Error("A edição não foi encontrada ou já está ativa.");
+    if (store.editions.some((item) => item.id !== id && !item.archived && item.mangaId === edition.mangaId && item.name.toLocaleLowerCase("pt-BR") === edition.name.toLocaleLowerCase("pt-BR"))) throw new Error("Já existe uma edição ativa com esse nome para esta obra.");
+    edition.archived = false;
   },
   createQuotation(input: { editionId: string; price: number; observedAt: string; listingUrl?: string | null; conditionNotes?: string | null; collectionComplete: true }): Quotation {
     if (!store.editions.some((e) => e.id === input.editionId && !e.archived)) throw new Error("A edição selecionada não existe.");

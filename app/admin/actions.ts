@@ -169,6 +169,18 @@ export async function archiveMangaAction(_previous: MangaActionState, formData: 
 }
 
 
+export async function restoreMangaAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da obra inválido." };
+  try {
+    await dataRepository.restoreManga(id);
+    refreshDataPages();
+    return { success: true, message: successMessage("Obra restaurada no Supabase e disponível novamente no catálogo.", "Obra restaurada temporariamente; a alteração não é permanente.") };
+  } catch (error) { return failure(error); }
+}
+
 function editionFormData(formData: FormData) {
   return {
     mangaId: formData.get("mangaId"), name: formData.get("name"), publisher: formData.get("publisher") || null,
@@ -205,7 +217,19 @@ export async function archiveEditionAction(_previous: MangaActionState, formData
 }
 
 
-export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+export async function restoreEditionAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
+  if (localOnly()) return { success: false, message: localOnlyMessage() };
+  if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
+  const id = formData.get("id");
+  if (!validId(id)) return { success: false, message: "Identificador da edição inválido." };
+  try {
+    await dataRepository.restoreEdition(id);
+    refreshDataPages();
+    return { success: true, message: successMessage("Edição restaurada no Supabase sem alterar as cotações históricas.", "Edição restaurada temporariamente sem alterar as cotações.") };
+  } catch (error) { return failure(error); }
+}
+
+export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData) {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
