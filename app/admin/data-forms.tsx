@@ -1,10 +1,36 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { createEditionAction, createOfferAction, createQuotationAction, type MangaActionState } from "./actions";
 import type { Edition, Manga } from "@/lib/types";
 
 const initialState: MangaActionState = { message: "", success: false };
+
+function localDateTimeValue(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function TimezoneOffsetField() {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => setOffset(new Date().getTimezoneOffset()), []);
+  return <input type="hidden" name="timezoneOffsetMinutes" value={offset} readOnly />;
+}
+
+function DateTimeLocalInput({ id, name, required = false, initialIso, defaultNow = false }: {
+  id: string; name: string; required?: boolean; initialIso?: string | null; defaultNow?: boolean;
+}) {
+  const [value, setValue] = useState("");
+  useEffect(() => {
+    if (initialIso) {
+      const date = new Date(initialIso);
+      setValue(Number.isNaN(date.getTime()) ? "" : localDateTimeValue(date));
+    } else {
+      setValue(defaultNow ? localDateTimeValue(new Date()) : "");
+    }
+  }, [initialIso, defaultNow]);
+  return <input id={id} name={name} type="datetime-local" required={required} value={value} onChange={(event) => setValue(event.target.value)} />;
+}
 function Status({ state }: { state: MangaActionState }) {
   return state.message ? <p className={state.success ? "form-message form-message-success" : "form-message"} role="status">{state.message}</p> : null;
 }
@@ -36,7 +62,7 @@ export function QuotationForm({ editions }: { editions: Edition[] }) {
     <div className="field"><label htmlFor="quotation-edition">Edição *</label><select id="quotation-edition" name="editionId" required defaultValue=""><option value="" disabled>Selecione uma edição</option><EditionOptions editions={editions}/></select></div>
     <div className="form-grid">
       <div className="field"><label htmlFor="quotation-price">Preço da coleção completa (R$) *</label><input id="quotation-price" name="price" type="number" min="0.01" max="1000000" step="0.01" required placeholder="150,00"/></div>
-      <div className="field"><label htmlFor="quotation-date">Data observada *</label><input id="quotation-date" name="observedAt" type="datetime-local" required defaultValue={new Date().toISOString().slice(0,16)}/></div>
+      <div className="field"><label htmlFor="quotation-date">Data observada *</label><DateTimeLocalInput id="quotation-date" name="observedAt" required defaultNow/></div>
       <div className="field"><label htmlFor="quotation-url">Link do anúncio</label><input id="quotation-url" name="listingUrl" type="url" placeholder="https://..."/></div>
       <div className="field"><label htmlFor="quotation-condition">Condição / observações</label><input id="quotation-condition" name="conditionNotes" maxLength={5000} placeholder="Estado de conservação, itens inclusos..."/></div>
     </div>
@@ -60,8 +86,8 @@ export function OfferForm({ mangas, editions }: { mangas: Manga[]; editions: Edi
       <div className="field"><label htmlFor="offer-product-url">Link do produto *</label><input id="offer-product-url" name="productUrl" type="url" required placeholder="https://..."/></div>
       <div className="field"><label htmlFor="offer-affiliate">Link afiliado (opcional)</label><input id="offer-affiliate" name="affiliateUrl" type="url" placeholder="https://..."/></div>
       <div className="field"><label htmlFor="offer-image">URL da imagem (opcional)</label><input id="offer-image" name="imageUrl" type="url" placeholder="https://..."/></div>
-      <div className="field"><label htmlFor="offer-verified">Verificada em *</label><input id="offer-verified" name="verifiedAt" type="datetime-local" required defaultValue={new Date().toISOString().slice(0,16)}/></div>
-      <div className="field"><label htmlFor="offer-expiry">Expira em (opcional)</label><input id="offer-expiry" name="expiresAt" type="datetime-local"/></div>
+      <div className="field"><label htmlFor="offer-verified">Verificada em *</label><DateTimeLocalInput id="offer-verified" name="verifiedAt" required defaultNow/></div>
+      <div className="field"><label htmlFor="offer-expiry">Expira em (opcional)</label><DateTimeLocalInput id="offer-expiry" name="expiresAt"/></div>
       <div className="field"><label htmlFor="offer-status">Status *</label><select id="offer-status" name="status" defaultValue="draft"><option value="draft">Rascunho</option><option value="published">Publicada</option><option value="disabled">Desativada</option><option value="expired">Expirada</option></select></div>
     </div>
     <label className="field" style={{display:"flex",alignItems:"center",gridTemplateColumns:"auto 1fr",gap:9}}><input name="previousPriceConfirmed" type="checkbox" style={{width:16}}/>Confirmo o preço anterior com evidência verificável.</label>
