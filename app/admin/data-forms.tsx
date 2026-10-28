@@ -41,7 +41,7 @@ function EditionOptions({ editions }: { editions: Edition[] }) {
 export function EditionForm({ mangas }: { mangas: Manga[] }) {
   const [state, action, pending] = useActionState(createEditionAction, initialState);
   if (!mangas.length) return <div className="empty-small">Cadastre uma obra antes de adicionar uma edição.</div>;
-  return <form action={action} className="admin-form">\n    <TimezoneOffsetField/>
+  return <form action={action} className="admin-form">
     <div className="field"><label htmlFor="edition-manga">Obra *</label><select id="edition-manga" name="mangaId" required defaultValue=""><option value="" disabled>Selecione uma obra</option>{mangas.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}</select></div>
     <div className="form-grid">
       <div className="field"><label htmlFor="edition-name">Nome da edição *</label><input id="edition-name" name="name" required maxLength={180} placeholder="Ex.: Edição brasileira, volume 1"/></div>
@@ -58,7 +58,8 @@ export function EditionForm({ mangas }: { mangas: Manga[] }) {
 export function QuotationForm({ editions }: { editions: Edition[] }) {
   const [state, action, pending] = useActionState(createQuotationAction, initialState);
   if (!editions.length) return <div className="empty-small">Cadastre uma edição antes de registrar uma cotação.</div>;
-  return <form action={action} className="admin-form">\n    <TimezoneOffsetField/>
+  return <form action={action} className="admin-form">
+    <TimezoneOffsetField/>
     <div className="field"><label htmlFor="quotation-edition">Edição *</label><select id="quotation-edition" name="editionId" required defaultValue=""><option value="" disabled>Selecione uma edição</option><EditionOptions editions={editions}/></select></div>
     <div className="form-grid">
       <div className="field"><label htmlFor="quotation-price">Preço da coleção completa (R$) *</label><input id="quotation-price" name="price" type="number" min="0.01" max="1000000" step="0.01" required placeholder="150,00"/></div>
@@ -73,7 +74,8 @@ export function QuotationForm({ editions }: { editions: Edition[] }) {
 
 export function OfferForm({ mangas, editions }: { mangas: Manga[]; editions: Edition[] }) {
   const [state, action, pending] = useActionState(createOfferAction, initialState);
-  return <form action={action} className="admin-form">\n    <TimezoneOffsetField/>
+  return <form action={action} className="admin-form">
+    <TimezoneOffsetField/>
     <div className="form-grid">
       <div className="field"><label htmlFor="offer-title">Título do produto *</label><input id="offer-title" name="title" required maxLength={220} placeholder="Nome do volume, box ou edição"/></div>
       <div className="field"><label htmlFor="offer-store">Loja *</label><input id="offer-store" name="store" required maxLength={120}/></div>
