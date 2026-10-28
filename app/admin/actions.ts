@@ -6,6 +6,7 @@ import { dataRepository, dataMode } from "@/lib/data";
 import { isSupabaseAdmin } from "@/lib/supabase/admin";
 import { editionInputSchema, mangaInputSchema, offerInputSchema, quotationInputSchema, updateOfferInputSchema } from "@/lib/validation";
 import type { OfferStatus } from "@/lib/types";
+import { parseDateTimeLocal } from "@/lib/datetime";
 
 export type MangaActionState = { message: string; success: boolean };
 const localOnly = () => dataMode !== "supabase" && (process.env.NODE_ENV === "production" || process.env.MANGATRACK_DATA_MODE === "supabase");
@@ -82,8 +83,10 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
   let observedAt: string;
   try {
     const rawDate = String(formData.get("observedAt") || "");
-    if (!rawDate) throw new Error("missing date");
-    observedAt = new Date(rawDate).toISOString();
+    const offset = Number(formData.get("timezoneOffsetMinutes"));
+    const parsedDate = parseDateTimeLocal(rawDate, offset);
+    if (!parsedDate) throw new Error("invalid local date");
+    observedAt = parsedDate;
   } catch {
     return { success: false, message: "Informe uma data e hora válidas para a cotação." };
   }
@@ -101,11 +104,18 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
 export async function createOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
-  const toDate = (value: FormDataEntryValue | null) => value ? new Date(String(value)).toISOString() : null;
+  const offset = Number(formData.get("timezoneOffsetMinutes"));
+  const rawVerifiedAt = String(formData.get("verifiedAt") || "");
+  const rawExpiresAt = String(formData.get("expiresAt") || "");
   let verifiedAt: string;
   let expiresAt: string | null;
-  try { verifiedAt = toDate(formData.get("verifiedAt")) ?? new Date().toISOString(); expiresAt = toDate(formData.get("expiresAt")); }
-  catch { return { success: false, message: "Confira as datas informadas." }; }
+  try {
+    const parsedVerifiedAt = parseDateTimeLocal(rawVerifiedAt, offset);
+    if (!parsedVerifiedAt) throw new Error("invalid verification date");
+    verifiedAt = parsedVerifiedAt;
+    expiresAt = rawExpiresAt ? parseDateTimeLocal(rawExpiresAt, offset) : null;
+    if (rawExpiresAt && !expiresAt) throw new Error("invalid expiry date");
+  } catch { return { success: false, message: "Confira as datas informadas." }; }
   const rawMangaId = String(formData.get("mangaId") || "");
   const rawEditionId = String(formData.get("editionId") || "");
   const rawPreviousPrice = String(formData.get("previousPrice") || "");
@@ -270,9 +280,8 @@ export async function updateOfferAction(_previous: MangaActionState, formData: F
   let expiresAt: string | null = null;
   const rawExpiry = String(formData.get("expiresAt") || "");
   if (rawExpiry) {
-    const date = new Date(rawExpiry);
-    if (Number.isNaN(date.getTime())) return { success: false, message: "Informe uma data de expiração válida." };
-    expiresAt = date.toISOString();
+    expiresAt = parseDateTimeLocal(rawExpiry, Number(formData.get("timezoneOffsetMinutes")));
+    if (!expiresAt) return { success: false, message: "Informe uma data de expiração válida." };
   }
   const parsed = updateOfferInputSchema.safeParse({
     title: formData.get("title"), store: formData.get("store"),
