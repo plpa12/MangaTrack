@@ -83,7 +83,7 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
   let observedAt: string;
   try {
     const rawDate = String(formData.get("observedAt") || "");
-    const offset = Number(formData.get("timezoneOffsetMinutes"));
+    const offset = Number(formData.get("observedAtTimezoneOffsetMinutes"));
     const parsedDate = parseDateTimeLocal(rawDate, offset);
     if (!parsedDate) throw new Error("invalid local date");
     observedAt = parsedDate;
@@ -104,16 +104,17 @@ export async function createQuotationAction(_previous: MangaActionState, formDat
 export async function createOfferAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
-  const offset = Number(formData.get("timezoneOffsetMinutes"));
+  const verifiedOffset = Number(formData.get("verifiedAtTimezoneOffsetMinutes"));
+  const expiresOffset = Number(formData.get("expiresAtTimezoneOffsetMinutes"));
   const rawVerifiedAt = String(formData.get("verifiedAt") || "");
   const rawExpiresAt = String(formData.get("expiresAt") || "");
   let verifiedAt: string;
   let expiresAt: string | null;
   try {
-    const parsedVerifiedAt = parseDateTimeLocal(rawVerifiedAt, offset);
+    const parsedVerifiedAt = parseDateTimeLocal(rawVerifiedAt, verifiedOffset);
     if (!parsedVerifiedAt) throw new Error("invalid verification date");
     verifiedAt = parsedVerifiedAt;
-    expiresAt = rawExpiresAt ? parseDateTimeLocal(rawExpiresAt, offset) : null;
+    expiresAt = rawExpiresAt ? parseDateTimeLocal(rawExpiresAt, expiresOffset) : null;
     if (rawExpiresAt && !expiresAt) throw new Error("invalid expiry date");
   } catch { return { success: false, message: "Confira as datas informadas." }; }
   const rawMangaId = String(formData.get("mangaId") || "");
@@ -280,7 +281,7 @@ export async function updateOfferAction(_previous: MangaActionState, formData: F
   let expiresAt: string | null = null;
   const rawExpiry = String(formData.get("expiresAt") || "");
   if (rawExpiry) {
-    expiresAt = parseDateTimeLocal(rawExpiry, Number(formData.get("timezoneOffsetMinutes")));
+    expiresAt = parseDateTimeLocal(rawExpiry, Number(formData.get("expiresAtTimezoneOffsetMinutes")));
     if (!expiresAt) return { success: false, message: "Informe uma data de expiração válida." };
   }
   const parsed = updateOfferInputSchema.safeParse({

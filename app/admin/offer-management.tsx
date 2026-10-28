@@ -15,11 +15,6 @@ function localDateTimeValue(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
-function TimezoneOffsetField() {
-  const [offset, setOffset] = useState(0);
-  useEffect(() => setOffset(new Date().getTimezoneOffset()), []);
-  return <input type="hidden" name="timezoneOffsetMinutes" value={offset} readOnly />;
-}
 function LocalExpiryInput({ id, initialIso }: { id: string; initialIso: string | null }) {
   const [value, setValue] = useState("");
   useEffect(() => {
@@ -27,7 +22,11 @@ function LocalExpiryInput({ id, initialIso }: { id: string; initialIso: string |
     const date = new Date(initialIso);
     setValue(Number.isNaN(date.getTime()) ? "" : localDateTimeValue(date));
   }, [initialIso]);
-  return <input id={id} name="expiresAt" type="datetime-local" value={value} onChange={(event) => setValue(event.target.value)} />;
+  const timezoneOffset = value ? new Date(value).getTimezoneOffset() : new Date().getTimezoneOffset();
+  return <>
+    <input id={id} name="expiresAt" type="datetime-local" value={value} onChange={(event) => setValue(event.target.value)} />
+    <input type="hidden" name="expiresAtTimezoneOffsetMinutes" value={timezoneOffset} readOnly />
+  </>;
 }
 function OfferItem({ offer }: { offer: Offer }) {
   const [state, action, pending] = useActionState(updateOfferAction, initialState);
@@ -36,8 +35,7 @@ function OfferItem({ offer }: { offer: Offer }) {
   return <details className="panel" style={{ marginBottom: 12 }}>
     <summary style={{ cursor: "pointer", fontWeight: 650, padding: 4 }}>{offer.title} <span className="muted">— {offer.store} · {labels[offer.status]}</span></summary>
     <form action={action} className="admin-form" style={{ marginTop: 12 }}>
-            <input type="hidden" name="id" value={offer.id}/>
-      <TimezoneOffsetField/>
+      <input type="hidden" name="id" value={offer.id}/>
       <div className="form-grid">
         <div className="field"><label htmlFor={`offer-title-${offer.id}`}>Título *</label><input id={`offer-title-${offer.id}`} name="title" required maxLength={220} defaultValue={offer.title}/></div>
         <div className="field"><label htmlFor={`offer-store-${offer.id}`}>Loja *</label><input id={`offer-store-${offer.id}`} name="store" required maxLength={120} defaultValue={offer.store}/></div>

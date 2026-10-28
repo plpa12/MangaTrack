@@ -11,12 +11,6 @@ function localDateTimeValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function TimezoneOffsetField() {
-  const [offset, setOffset] = useState(0);
-  useEffect(() => setOffset(new Date().getTimezoneOffset()), []);
-  return <input type="hidden" name="timezoneOffsetMinutes" value={offset} readOnly />;
-}
-
 function DateTimeLocalInput({ id, name, required = false, initialIso, defaultNow = false }: {
   id: string; name: string; required?: boolean; initialIso?: string | null; defaultNow?: boolean;
 }) {
@@ -29,7 +23,11 @@ function DateTimeLocalInput({ id, name, required = false, initialIso, defaultNow
       setValue(defaultNow ? localDateTimeValue(new Date()) : "");
     }
   }, [initialIso, defaultNow]);
-  return <input id={id} name={name} type="datetime-local" required={required} value={value} onChange={(event) => setValue(event.target.value)} />;
+  const timezoneOffset = value ? new Date(value).getTimezoneOffset() : new Date().getTimezoneOffset();
+  return <>
+    <input id={id} name={name} type="datetime-local" required={required} value={value} onChange={(event) => setValue(event.target.value)} />
+    <input type="hidden" name={`${name}TimezoneOffsetMinutes`} value={timezoneOffset} readOnly />
+  </>;
 }
 function Status({ state }: { state: MangaActionState }) {
   return state.message ? <p className={state.success ? "form-message form-message-success" : "form-message"} role="status">{state.message}</p> : null;
@@ -59,7 +57,6 @@ export function QuotationForm({ editions }: { editions: Edition[] }) {
   const [state, action, pending] = useActionState(createQuotationAction, initialState);
   if (!editions.length) return <div className="empty-small">Cadastre uma edição antes de registrar uma cotação.</div>;
   return <form action={action} className="admin-form">
-    <TimezoneOffsetField/>
     <div className="field"><label htmlFor="quotation-edition">Edição *</label><select id="quotation-edition" name="editionId" required defaultValue=""><option value="" disabled>Selecione uma edição</option><EditionOptions editions={editions}/></select></div>
     <div className="form-grid">
       <div className="field"><label htmlFor="quotation-price">Preço da coleção completa (R$) *</label><input id="quotation-price" name="price" type="number" min="0.01" max="1000000" step="0.01" required placeholder="150,00"/></div>
@@ -75,7 +72,6 @@ export function QuotationForm({ editions }: { editions: Edition[] }) {
 export function OfferForm({ mangas, editions }: { mangas: Manga[]; editions: Edition[] }) {
   const [state, action, pending] = useActionState(createOfferAction, initialState);
   return <form action={action} className="admin-form">
-    <TimezoneOffsetField/>
     <div className="form-grid">
       <div className="field"><label htmlFor="offer-title">Título do produto *</label><input id="offer-title" name="title" required maxLength={220} placeholder="Nome do volume, box ou edição"/></div>
       <div className="field"><label htmlFor="offer-store">Loja *</label><input id="offer-store" name="store" required maxLength={120}/></div>
