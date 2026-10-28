@@ -38,17 +38,10 @@ jobs:
         run: |
           set -eu
           missing=0
-          for name in SUPABASE_URL SUPABASE_ANON_KEY SMOKE_EMAIL SMOKE_PASSWORD; do
-            if [ -z "${!name:-}" ]; then
-              case "$name" in
-                SUPABASE_URL) echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_URL" ;;
-                SUPABASE_ANON_KEY) echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_ANON_KEY" ;;
-                SMOKE_EMAIL) echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_EMAIL" ;;
-                SMOKE_PASSWORD) echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_PASSWORD" ;;
-              esac
-              missing=1
-            fi
-          done
+          if [ -z "$SUPABASE_URL" ]; then echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_URL"; missing=1; fi
+          if [ -z "$SUPABASE_ANON_KEY" ]; then echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_ANON_KEY"; missing=1; fi
+          if [ -z "$SMOKE_EMAIL" ]; then echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_EMAIL"; missing=1; fi
+          if [ -z "$SMOKE_PASSWORD" ]; then echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_PASSWORD"; missing=1; fi
           if [ "$missing" -ne 0 ]; then
             echo "Configure the missing repository Actions secrets, then run this workflow again."
             exit 1
