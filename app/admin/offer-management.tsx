@@ -36,7 +36,8 @@ function OfferItem({ offer }: { offer: Offer }) {
   return <details className="panel" style={{ marginBottom: 12 }}>
     <summary style={{ cursor: "pointer", fontWeight: 650, padding: 4 }}>{offer.title} <span className="muted">— {offer.store} · {labels[offer.status]}</span></summary>
     <form action={action} className="admin-form" style={{ marginTop: 12 }}>
-      <input type="hidden" name="id" value={offer.id}/>\n      <TimezoneOffsetField/>
+            <input type="hidden" name="id" value={offer.id}/>
+      <TimezoneOffsetField/>
       <div className="form-grid">
         <div className="field"><label htmlFor={`offer-title-${offer.id}`}>Título *</label><input id={`offer-title-${offer.id}`} name="title" required maxLength={220} defaultValue={offer.title}/></div>
         <div className="field"><label htmlFor={`offer-store-${offer.id}`}>Loja *</label><input id={`offer-store-${offer.id}`} name="store" required maxLength={120} defaultValue={offer.store}/></div>
