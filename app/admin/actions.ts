@@ -229,7 +229,7 @@ export async function restoreEditionAction(_previous: MangaActionState, formData
   } catch (error) { return failure(error); }
 }
 
-export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData) {
+export async function updateOfferStatusAction(_previous: MangaActionState, formData: FormData): Promise<MangaActionState> {
   if (localOnly()) return { success: false, message: localOnlyMessage() };
   if (dataMode === "supabase" && !(await isSupabaseAdmin())) return adminDenied();
   const id = formData.get("id");
