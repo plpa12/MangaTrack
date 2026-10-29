@@ -23,17 +23,26 @@ jobs:
       - name: Install dependencies
         # Install exact resolved versions from package-lock.json.
         run: npm ci --no-audit --no-fund
+      - name: Dependency vulnerability audit
+        id: audit
+        run: npm audit --audit-level=high
+      # Continue diagnostics after an audit failure so security work does not hide test/build results.
       - name: TypeScript
+        if: success() || steps.audit.outcome == 'failure'
         run: npm run typecheck
       - name: Unit tests
+        if: success() || steps.audit.outcome == 'failure'
         run: npm test
       - name: Lint
+        if: success() || steps.audit.outcome == 'failure'
         run: npm run lint
       - name: Production build
+        if: success() || steps.audit.outcome == 'failure'
         run: npm run build
         env:
           MANGATRACK_DATA_MODE: local
       - name: Production server smoke test
+        if: success() || steps.audit.outcome == 'failure'
         run: |
           set -e
           npm run start -- --hostname 127.0.0.1 > /tmp/mangatrack-server.log 2>&1 &

@@ -1,0 +1,58 @@
+name: Supabase authenticated persistence smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production_test:
+        description: "Confirm this will briefly insert and then delete one uniquely named test manga in the configured Supabase project."
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mangatrack-supabase-smoke
+  cancel-in-progress: false
+
+jobs:
+  supabase-smoke:
+    if: inputs.confirm_production_test == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Verify required secrets are configured
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_EMAIL: ${{ secrets.SUPABASE_SMOKE_TEST_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SUPABASE_SMOKE_TEST_PASSWORD }}
+        run: |
+          set -eu
+          missing=0
+          if [ -z "$SUPABASE_URL" ]; then echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_URL"; missing=1; fi
+          if [ -z "$SUPABASE_ANON_KEY" ]; then echo "Missing GitHub secret: NEXT_PUBLIC_SUPABASE_ANON_KEY"; missing=1; fi
+          if [ -z "$SMOKE_EMAIL" ]; then echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_EMAIL"; missing=1; fi
+          if [ -z "$SMOKE_PASSWORD" ]; then echo "Missing GitHub secret: SUPABASE_SMOKE_TEST_PASSWORD"; missing=1; fi
+          if [ "$missing" -ne 0 ]; then
+            echo "Configure the missing repository Actions secrets, then run this workflow again."
+            exit 1
+          fi
+          echo "All required secrets are configured; values were not printed."
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Test authenticated Supabase persistence
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SMOKE_TEST_EMAIL: ${{ secrets.SUPABASE_SMOKE_TEST_EMAIL }}
+          SUPABASE_SMOKE_TEST_PASSWORD: ${{ secrets.SUPABASE_SMOKE_TEST_PASSWORD }}
+        run: npm run test:supabase
